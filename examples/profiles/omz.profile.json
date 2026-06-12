@@ -1,0 +1,123 @@
+{
+  "$schema": "../../schemas/profile.schema.json",
+  "schemaVersion": 1,
+  "name": "omz",
+  "version": "1.0.0",
+  "description": "SDD-first frontend AI coding workflow with explicit human approval boundaries.",
+  "coreCompatibility": "^1.0.0",
+  "entrySkill": "setup-omz",
+  "skills": [
+    { "id": "setup-omz", "version": "1.0.0", "source": "skills/setup-omz" },
+    { "id": "grill-with-docs", "version": "1.0.0", "source": "skills/grill-with-docs" },
+    { "id": "grill-me-ui", "version": "1.0.0", "source": "skills/grill-me-ui" },
+    { "id": "to-locate", "version": "1.0.0", "source": "skills/to-locate" },
+    { "id": "to-prd", "version": "1.0.0", "source": "skills/to-prd" },
+    { "id": "to-plan", "version": "1.0.0", "source": "skills/to-plan" },
+    { "id": "to-issues", "version": "1.0.0", "source": "skills/to-issues" },
+    { "id": "to-coding", "version": "1.0.0", "source": "skills/to-coding" },
+    { "id": "to-test", "version": "1.0.0", "source": "skills/to-test" },
+    { "id": "to-quality-review", "version": "1.0.0", "source": "skills/to-quality-review" },
+    { "id": "to-review", "version": "1.0.0", "source": "skills/to-review" },
+    { "id": "to-commit", "version": "1.0.0", "source": "skills/to-commit" }
+  ],
+  "artifacts": [
+    {
+      "id": "project-knowledge-update",
+      "description": "Changes proposed for project-maintained Agent Docs.",
+      "format": "markdown"
+    },
+    {
+      "id": "requirement",
+      "description": "Clarified requirement, assumptions, conflicts, and open decisions.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/requirement.md"
+    },
+    {
+      "id": "ui-contract",
+      "description": "Observable UI states, interactions, edge cases, and accessibility behavior.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/ui-contract.md"
+    },
+    {
+      "id": "location-map",
+      "description": "Relevant code, ownership boundaries, and reusable asset map.",
+      "format": "markdown"
+    },
+    {
+      "id": "prd",
+      "description": "Approved product scope and observable acceptance criteria.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/prd.md"
+    },
+    {
+      "id": "plan",
+      "description": "Repository-grounded implementation and verification plan.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/plan.md"
+    },
+    {
+      "id": "issue-set",
+      "description": "Ordered and independently verifiable implementation slices.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/issues/"
+    },
+    {
+      "id": "source-change",
+      "description": "Approved changes to product source, tests, and related documentation.",
+      "format": "source-change"
+    },
+    {
+      "id": "test-report",
+      "description": "Commands, observations, failures, coverage gaps, and residual risk.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/test-report.md",
+      "validator": "work-item-evidence"
+    },
+    {
+      "id": "quality-review",
+      "description": "Quality gate result across correctness, security, accessibility, and maintainability.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/quality-review.md"
+    },
+    {
+      "id": "code-review",
+      "description": "Severity-ordered code review findings and residual test risk.",
+      "format": "markdown",
+      "defaultPathTemplate": "docs/agent/work/{workId}/code-review.md"
+    },
+    {
+      "id": "delivery-plan",
+      "description": "Verified commit and pull request handoff without implicit external execution.",
+      "format": "markdown"
+    }
+  ],
+  "seeds": [
+    {
+      "source": "seeds/AGENTS.md",
+      "target": "AGENTS.md",
+      "ownership": "project",
+      "merge": "create-only"
+    },
+    {
+      "source": "seeds/docs/agent/architecture.md",
+      "target": "docs/agent/architecture.md",
+      "ownership": "project",
+      "merge": "suggest-diff"
+    }
+  ],
+  "rules": [
+    "rules/coding.mdc"
+  ],
+  "adapterRequirements": {
+    "requiredCapabilities": [
+      "projectInstructions",
+      "skills"
+    ],
+    "recommendedAdapters": [
+      "codex"
+    ]
+  },
+  "validators": [
+    "work-item-evidence"
+  ]
+}

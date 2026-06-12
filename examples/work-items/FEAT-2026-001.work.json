@@ -1,0 +1,46 @@
+{
+  "$schema": "../../schemas/work-item.schema.json",
+  "schemaVersion": 1,
+  "id": "FEAT-2026-001",
+  "title": "Add searchable order list",
+  "type": "feature",
+  "status": "active",
+  "scope": "admin-web",
+  "links": {
+    "branch": "feat/order-list",
+    "issue": "https://example.invalid/issues/123"
+  },
+  "activeSkill": "to-plan",
+  "blockers": [],
+  "artifacts": [
+    {
+      "type": "requirement",
+      "path": "docs/agent/work/FEAT-2026-001-order-list/requirement.md",
+      "status": "approved",
+      "updatedAt": "2026-06-12T10:30:00.000Z"
+    },
+    {
+      "type": "prd",
+      "path": "docs/agent/work/FEAT-2026-001-order-list/prd.md",
+      "status": "approved",
+      "updatedAt": "2026-06-12T11:00:00.000Z"
+    },
+    {
+      "type": "plan",
+      "path": "docs/agent/work/FEAT-2026-001-order-list/plan.md",
+      "status": "draft",
+      "updatedAt": "2026-06-12T11:10:00.000Z"
+    }
+  ],
+  "approvals": [
+    {
+      "subject": "prd",
+      "actor": "project-owner",
+      "decision": "approved",
+      "at": "2026-06-12T11:00:00.000Z",
+      "note": "Scope and acceptance criteria approved for planning."
+    }
+  ],
+  "createdAt": "2026-06-12T10:00:00.000Z",
+  "updatedAt": "2026-06-12T11:10:00.000Z"
+}

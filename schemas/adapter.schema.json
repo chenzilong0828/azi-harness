@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azi-harness.dev/schemas/adapter.schema.json",
+  "title": "AZI Adapter",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "version",
+    "status",
+    "description",
+    "coreCompatibility",
+    "capabilities",
+    "targets",
+    "unsupportedCapabilityPolicy"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "$ref": "#/$defs/id"
+    },
+    "version": {
+      "$ref": "#/$defs/semver"
+    },
+    "status": {
+      "enum": ["experimental", "stable", "deprecated"]
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20
+    },
+    "coreCompatibility": {
+      "type": "string",
+      "minLength": 1
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projectInstructions",
+        "skills",
+        "namedInvocation",
+        "rules",
+        "mcp",
+        "uiMetadata",
+        "projectDiscovery"
+      ],
+      "properties": {
+        "projectInstructions": {
+          "type": "boolean"
+        },
+        "skills": {
+          "type": "boolean"
+        },
+        "namedInvocation": {
+          "type": "boolean"
+        },
+        "rules": {
+          "type": "boolean"
+        },
+        "mcp": {
+          "type": "boolean"
+        },
+        "uiMetadata": {
+          "type": "boolean"
+        },
+        "projectDiscovery": {
+          "type": "boolean"
+        }
+      }
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["sourceKind", "targetTemplate", "transform", "ownership"],
+        "properties": {
+          "sourceKind": {
+            "enum": ["project-instructions", "skill-contract", "skill-instructions", "rule", "ui-metadata"]
+          },
+          "targetTemplate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "transform": {
+            "$ref": "#/$defs/id"
+          },
+          "ownership": {
+            "const": "managed-generated"
+          }
+        }
+      }
+    },
+    "unsupportedCapabilityPolicy": {
+      "type": "object",
+      "additionalProperties": {
+        "enum": ["error", "warn", "ignore"]
+      }
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$"
+    }
+  }
+}

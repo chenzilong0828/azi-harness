@@ -1,0 +1,33 @@
+{
+  "$schema": "../../schemas/validator.schema.json",
+  "schemaVersion": 1,
+  "id": "work-item-evidence",
+  "version": "1.0.0",
+  "description": "Verify that a work item has the approved artifacts and honest test evidence required for delivery.",
+  "phase": [
+    "doctor",
+    "work-item",
+    "delivery"
+  ],
+  "severity": "error",
+  "inputs": [
+    "work.json",
+    "artifact files referenced by work.json"
+  ],
+  "implementation": {
+    "kind": "builtin",
+    "entry": "validate-work-item-evidence"
+  },
+  "failures": [
+    {
+      "code": "WORK_ITEM_MISSING_ACCEPTANCE",
+      "message": "The work item has no approved observable acceptance criteria.",
+      "remediation": "Create or approve the PRD acceptance criteria before delivery."
+    },
+    {
+      "code": "WORK_ITEM_MISSING_TEST_EVIDENCE",
+      "message": "The work item has no executed test evidence or recorded reason it could not be run.",
+      "remediation": "Run the relevant checks and record results, or document the blocker and residual risk."
+    }
+  ]
+}

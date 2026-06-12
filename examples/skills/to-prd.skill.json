@@ -1,0 +1,69 @@
+{
+  "$schema": "../../schemas/skill.schema.json",
+  "schemaVersion": 1,
+  "id": "to-prd",
+  "version": "1.0.0",
+  "title": "To PRD",
+  "description": "Convert a clarified requirement into a concise and testable product requirements document.",
+  "role": "product",
+  "instructions": "SKILL.md",
+  "triggers": [
+    "The requirement has been clarified and needs an approval-ready specification."
+  ],
+  "inputs": [
+    {
+      "id": "requirement",
+      "required": true,
+      "description": "Clarified problem, users, constraints, and open decisions."
+    },
+    {
+      "id": "ui-contract",
+      "required": false,
+      "description": "UI states and interaction contract when the work affects user interfaces."
+    }
+  ],
+  "reads": [
+    "AGENTS.md",
+    "docs/agent/**",
+    "docs/agent/work/{workId}/requirement.md"
+  ],
+  "outputs": [
+    {
+      "artifactType": "prd",
+      "required": true,
+      "pathTemplate": "docs/agent/work/{workId}/prd.md"
+    }
+  ],
+  "permissions": {
+    "filesystem": {
+      "read": [
+        "**"
+      ],
+      "write": [
+        "docs/agent/work/{workId}/prd.md",
+        "docs/agent/work/{workId}/work.json"
+      ]
+    },
+    "commands": {
+      "mode": "denied"
+    },
+    "git": "read",
+    "network": "denied",
+    "externalSideEffects": "denied"
+  },
+  "approval": {
+    "level": "before-write",
+    "reason": "The PRD becomes the approved scope for planning and implementation."
+  },
+  "completionCriteria": [
+    "The PRD contains scope, non-goals, observable acceptance criteria, constraints, and open questions.",
+    "Assumptions are marked and unresolved material decisions are not treated as approved."
+  ],
+  "stopConditions": [
+    "The requirement still has a material product, data, permission, or UX ambiguity.",
+    "Repository evidence contradicts the requested behavior."
+  ],
+  "nextSkills": [
+    "to-plan"
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "$schema": "../../schemas/adapter.schema.json",
+  "schemaVersion": 1,
+  "id": "codex",
+  "version": "1.0.0",
+  "status": "experimental",
+  "description": "Compile canonical AZI project instructions and skills into Codex-discoverable project files.",
+  "coreCompatibility": "^1.0.0",
+  "capabilities": {
+    "projectInstructions": true,
+    "skills": true,
+    "namedInvocation": true,
+    "rules": false,
+    "mcp": false,
+    "uiMetadata": true,
+    "projectDiscovery": true
+  },
+  "targets": [
+    {
+      "sourceKind": "skill-instructions",
+      "targetTemplate": ".codex/skills/azi-{skillId}/SKILL.md",
+      "transform": "codex-skill-markdown",
+      "ownership": "managed-generated"
+    },
+    {
+      "sourceKind": "ui-metadata",
+      "targetTemplate": ".codex/skills/azi-{skillId}/agents/openai.yaml",
+      "transform": "codex-openai-yaml",
+      "ownership": "managed-generated"
+    }
+  ],
+  "unsupportedCapabilityPolicy": {
+    "rules": "warn",
+    "mcp": "ignore"
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azi-harness.dev/schemas/work-item.schema.json",
+  "title": "AZI Work Item",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "id",
+    "title",
+    "type",
+    "status",
+    "artifacts",
+    "approvals",
+    "createdAt",
+    "updatedAt"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9-]{2,63}$"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 3
+    },
+    "type": {
+      "enum": ["feature", "bug", "refactor", "research", "maintenance"]
+    },
+    "status": {
+      "enum": ["draft", "active", "blocked", "ready-for-review", "completed", "abandoned"]
+    },
+    "links": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "issue": {
+          "type": "string"
+        },
+        "pullRequest": {
+          "type": "string"
+        }
+      }
+    },
+    "scope": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "activeSkill": {
+      "type": ["string", "null"],
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 3
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["type", "path", "status"],
+        "properties": {
+          "type": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "path": {
+            "$ref": "#/$defs/relativePath"
+          },
+          "status": {
+            "enum": ["missing", "draft", "review-required", "approved", "rejected", "superseded"]
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "approvals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["subject", "actor", "decision", "at"],
+        "properties": {
+          "subject": {
+            "type": "string",
+            "minLength": 1
+          },
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "decision": {
+            "enum": ["approved", "rejected"]
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "$defs": {
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)|^[\\\\/]|^[A-Za-z]:"
+      }
+    }
+  }
+}

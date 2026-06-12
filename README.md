@@ -1,57 +1,42 @@
 # AZI Harness
 
-一个不绑定具体 AI 编辑器的 Coding Harness MVP。它负责把团队的 Agent 文档、规则、
-技能和交付流程安装到项目中，并通过状态机约束工作阶段。
+AZI Harness 是安装在软件项目中的开发期依赖。它把团队知识、研发规则、职责边界和
+SDD 工作流转化为 Coding Agent 可以读取、执行和验证的项目级协议。
 
-## 快速体验
+当前仓库处于 **阶段 1：规格设计**。旧 CLI 原型已经移除，尚未提供可安装的运行时。
 
-```powershell
-node .\bin\azi-harness.js init .\demo-project
-node .\bin\azi-harness.js doctor .\demo-project
-node .\bin\azi-harness.js status .\demo-project
-node .\bin\azi-harness.js advance planning .\demo-project
+## 产品结构
+
+```text
+AZI Harness
+├─ Core               协议、配置和生命周期
+├─ Profiles           可版本化的团队工作流组合
+├─ Skills             有输入输出契约的工作单元
+├─ Adapters           不同 Coding Agent 的格式适配
+├─ Validators         项目和交付产物检查
+├─ Project Knowledge  项目维护的真实知识
+└─ CLI                上述能力的管理界面
 ```
 
-全局链接后：
+CLI 不是产品本体。未来推荐的安装方式是：
 
-```powershell
-npm link
-azi-harness init .
+```bash
+npm install --save-dev azi-harness
+npx azi init --profile omz --adapter codex
 ```
 
-发布到 npm 后，用户可以直接安装：
+## 第一阶段成果
 
-```powershell
-npm install -g azi-harness
-azi-harness init .
+- [规格索引](./docs/spec/README.md)
+- [架构决策](./docs/adr/README.md)
+- [JSON Schema](./schemas/)
+- [契约示例](./examples/)
+- [验收与追踪矩阵](./docs/spec/10-acceptance-and-roadmap.md)
+
+检查规格文件：
+
+```bash
+npm run spec:check
 ```
 
-## MVP 命令
-
-- `azi-harness init [directory]`：初始化核心 Harness 文件。
-- `azi-harness setup [directory]`：补齐缺失文件；默认不覆盖已有内容。
-- `azi-harness doctor [directory]`：检查目录结构和工作流状态。
-- `azi-harness status [directory]`：显示当前阶段。
-- `azi-harness advance <stage> [directory]`：按顺序推进工作流。
-- `azi-harness skills [directory]`：显示核心 Skill 安装状态。
-
-## 设计原则
-
-- 编辑器无关：核心协议使用 Markdown 和 JSON。
-- 职责内聚：规则、文档、技能和状态各自独立。
-- 人机边界明确：破坏性操作和外部副作用需要人工确认。
-- 默认不覆盖：团队已有文件优先。
-- 流程可追溯：每次阶段转换写入 `.harness/state.json`。
-
-## 后续版本
-
-1. Codex、Claude Code、Cursor 等适配器。
-2. 可组合 Skill 包和远程 Registry。
-3. PRD/Issue/Test/Review 产物校验器。
-4. Git diff、commit 和 PR 门禁。
-5. 团队配置签名、版本锁定和安全审计。
-
-## 深入阅读
-
-- [Zerone-AI-Coding 原理、架构与复刻路线](./docs/zerone-architecture-guide.zh-CN.md)
-- [产品构想](./docs/product-blueprint.md)
+运行时代码将在规格审核通过后进入第二阶段开发。

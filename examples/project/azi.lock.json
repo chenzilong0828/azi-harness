@@ -1,0 +1,32 @@
+{
+  "$schema": "../../schemas/manifest.schema.json",
+  "schemaVersion": 1,
+  "harnessVersion": "1.0.0",
+  "profile": {
+    "name": "omz",
+    "version": "1.0.0"
+  },
+  "adapters": [
+    {
+      "name": "codex",
+      "version": "1.0.0"
+    }
+  ],
+  "generatedFiles": [
+    {
+      "path": ".codex/skills/azi-to-prd/SKILL.md",
+      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "source": "omz:to-prd:SKILL.md",
+      "generatorVersion": "1.0.0"
+    }
+  ],
+  "seededFiles": [
+    {
+      "path": "docs/agent/architecture.md",
+      "baseSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "source": "omz:seeds/docs/agent/architecture.md"
+    }
+  ],
+  "initializedAt": "2026-06-12T10:00:00.000Z",
+  "syncedAt": "2026-06-12T10:00:00.000Z"
+}

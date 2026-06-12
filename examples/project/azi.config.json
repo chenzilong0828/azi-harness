@@ -1,0 +1,50 @@
+{
+  "$schema": "../../schemas/project-config.schema.json",
+  "schemaVersion": 1,
+  "profile": {
+    "name": "omz",
+    "versionRange": "^1.0.0"
+  },
+  "adapters": [
+    {
+      "name": "codex",
+      "options": {}
+    }
+  ],
+  "project": {
+    "agentDocsRoot": "docs/agent",
+    "workItemsRoot": "docs/agent/work",
+    "rules": [
+      "rules/coding.mdc"
+    ],
+    "scopes": [
+      {
+        "name": "admin-web",
+        "root": "apps/admin",
+        "agentDocs": [
+          "docs/agent/admin-web.md"
+        ]
+      }
+    ]
+  },
+  "skills": {
+    "disabled": [],
+    "skillOverlays": [
+      {
+        "skill": "to-coding",
+        "instructions": "docs/agent/skills/to-coding.md"
+      }
+    ]
+  },
+  "policies": {
+    "telemetry": false,
+    "allowRemoteProfiles": false,
+    "generatedFilesInGit": true,
+    "executionMode": "bounded",
+    "autonomyBudget": {
+      "maxIterations": 20,
+      "maxCommandSeconds": 300,
+      "maxConsecutiveFailures": 3
+    }
+  }
+}
