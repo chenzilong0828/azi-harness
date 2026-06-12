@@ -1,0 +1,31 @@
+{
+  "name": "azi-harness",
+  "version": "0.1.0",
+  "description": "Editor-agnostic AI coding workflow harness",
+  "type": "module",
+  "bin": {
+    "azi-harness": "./bin/azi-harness.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "docs",
+    "README.md"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "check": "node ./bin/azi-harness.js --help"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chenzilong0828/azi-harness.git"
+  },
+  "bugs": {
+    "url": "https://github.com/chenzilong0828/azi-harness/issues"
+  },
+  "homepage": "https://github.com/chenzilong0828/azi-harness#readme",
+  "license": "MIT"
+}
