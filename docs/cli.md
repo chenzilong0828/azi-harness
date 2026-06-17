@@ -12,12 +12,6 @@ npm run azi -- --help
 npx azi-harness setup . --yes
 ```
 
-未发布到 npm 时，也可以直接从 GitHub 仓库执行：
-
-```bash
-npm exec --yes --package=git+https://github.com/chenzilong0828/azi-harness.git -c "azi-harness setup . --yes"
-```
-
 其中 `setup` 会自动判断：
 
 - 未接入项目：执行初始化。

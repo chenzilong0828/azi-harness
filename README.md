@@ -43,12 +43,6 @@ npx azi-harness setup . --yes
 
 这条命令会自动判断当前项目是首次接入还是已接入项目，然后自动执行 `init` 或 `sync`，最后补跑一次 `doctor`。
 
-如果暂时还没有发布到 npm，也可以直接从 GitHub 仓库运行：
-
-```bash
-npm exec --yes --package=git+https://github.com/chenzilong0828/azi-harness.git -c "azi-harness setup . --yes"
-```
-
 常用本地命令：
 
 ```bash
