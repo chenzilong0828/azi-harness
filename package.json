@@ -4,6 +4,9 @@
   "private": true,
   "description": "Team-level AI coding runtime for frontend projects.",
   "type": "module",
+  "bin": {
+    "azi-harness": "./scripts/azi-harness.mjs"
+  },
   "workspaces": [
     "packages/*"
   ],
