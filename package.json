@@ -1,0 +1,24 @@
+{
+  "name": "azi-harness-workspace",
+  "version": "0.1.0-dev.0",
+  "private": true,
+  "description": "Team-level AI coding runtime for frontend projects.",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "tsc -b --clean",
+    "pack:check": "node scripts/pack-check.mjs",
+    "typecheck": "tsc -b --pretty false",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "azi": "node packages/cli/dist/bin.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "typescript": "^5.8.3",
+    "vitest": "^4.1.9"
+  }
+}

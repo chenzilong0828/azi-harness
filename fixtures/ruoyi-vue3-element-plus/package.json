@@ -1,0 +1,20 @@
+{
+  "name": "ruoyi-vue3-example",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@10.8.2",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
+  },
+  "dependencies": {
+    "axios": "^1.8.0",
+    "element-plus": "^2.9.0",
+    "htw-table": "git+http://192.168.30.4/chenzl2/htw-table-vue.git#v1.2.0",
+    "vue": "^3.5.0"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "name": "mobile-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev:h5": "uni",
+    "build:h5": "uni build"
+  },
+  "dependencies": {
+    "@dcloudio/uni-app": "^3.0.0",
+    "vue": "^3.4.0"
+  }
+}
+

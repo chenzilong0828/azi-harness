@@ -1,0 +1,23 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./packages/core"
+    },
+    {
+      "path": "./packages/detectors"
+    },
+    {
+      "path": "./packages/checks"
+    },
+    {
+      "path": "./packages/spec-kit"
+    },
+    {
+      "path": "./packages/runtime-templates"
+    },
+    {
+      "path": "./packages/cli"
+    }
+  ]
+}

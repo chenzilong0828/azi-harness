@@ -1,0 +1,21 @@
+{
+  "name": "@azi-harness/spec-kit",
+  "version": "0.1.0-dev.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "schemas"
+  ],
+  "dependencies": {
+    "@azi-harness/core": "0.1.0-dev.0",
+    "yaml": "^2.8.1"
+  }
+}

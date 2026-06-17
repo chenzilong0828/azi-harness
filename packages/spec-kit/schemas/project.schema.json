@@ -1,0 +1,326 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://azi-harness.dev/schemas/project.schema.json",
+  "title": "azi-harness project profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "root",
+    "detected",
+    "effective",
+    "overridesApplied"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "1"
+    },
+    "generatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "root": {
+      "const": "."
+    },
+    "detected": {
+      "$ref": "#/$defs/projectFacts"
+    },
+    "effective": {
+      "$ref": "#/$defs/projectFacts"
+    },
+    "overridesApplied": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/projectOverride"
+      }
+    }
+  },
+  "$defs": {
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "source",
+        "detail"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "dependency",
+            "file",
+            "content",
+            "lockfile",
+            "script",
+            "absence"
+          ]
+        },
+        "source": {
+          "type": "string"
+        },
+        "detail": {
+          "type": "string"
+        }
+      }
+    },
+    "detectedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "confidence",
+        "evidence",
+        "conflicts"
+      ],
+      "properties": {
+        "value": {},
+        "confidence": {
+          "enum": [
+            "high",
+            "medium",
+            "low"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "commandFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "dev",
+        "build",
+        "test",
+        "lint",
+        "other"
+      ],
+      "properties": {
+        "dev": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "build": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "test": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "lint": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "other": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "htwTable": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "installed",
+        "packageName",
+        "versionSpec",
+        "source",
+        "compatibleVueMajor",
+        "documentationUrl",
+        "evidence",
+        "conflicts"
+      ],
+      "properties": {
+        "installed": {
+          "type": "boolean"
+        },
+        "packageName": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "versionSpec": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "source": {
+          "enum": [
+            "registry",
+            "git",
+            "file",
+            "workspace",
+            "project",
+            "unknown"
+          ]
+        },
+        "compatibleVueMajor": {
+          "enum": [
+            3,
+            null
+          ]
+        },
+        "documentationUrl": {
+          "type": "string"
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evidence"
+          }
+        },
+        "conflicts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "projectFacts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "projectType",
+        "packageManager",
+        "framework",
+        "ruoyi",
+        "capabilities",
+        "htwTable",
+        "commands",
+        "warnings"
+      ],
+      "properties": {
+        "projectType": {
+          "$ref": "#/$defs/detectedValue"
+        },
+        "packageManager": {
+          "$ref": "#/$defs/detectedValue"
+        },
+        "framework": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "vue",
+            "vueMajor",
+            "ui",
+            "uniapp"
+          ],
+          "properties": {
+            "vue": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "vueMajor": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "ui": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "uniapp": {
+              "$ref": "#/$defs/detectedValue"
+            }
+          }
+        },
+        "ruoyi": {
+          "$ref": "#/$defs/detectedValue"
+        },
+        "capabilities": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "permission",
+            "dict",
+            "request",
+            "routing",
+            "pagination",
+            "feedback"
+          ],
+          "properties": {
+            "permission": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "dict": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "request": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "routing": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "pagination": {
+              "$ref": "#/$defs/detectedValue"
+            },
+            "feedback": {
+              "$ref": "#/$defs/detectedValue"
+            }
+          }
+        },
+        "htwTable": {
+          "$ref": "#/$defs/htwTable"
+        },
+        "commands": {
+          "$ref": "#/$defs/commandFacts"
+        },
+        "warnings": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "projectOverride": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "value",
+        "reason",
+        "owner"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {},
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    }
+  }
+}
+

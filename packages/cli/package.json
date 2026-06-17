@@ -1,0 +1,20 @@
+{
+  "name": "azi-harness",
+  "version": "0.1.0-dev.0",
+  "description": "Install and maintain the azi-harness AI coding runtime.",
+  "type": "module",
+  "bin": {
+    "azi": "./dist/bin.js"
+  },
+  "main": "./dist/bin.js",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@azi-harness/checks": "0.1.0-dev.0",
+    "@azi-harness/core": "0.1.0-dev.0",
+    "@azi-harness/detectors": "0.1.0-dev.0",
+    "@azi-harness/runtime-templates": "0.1.0-dev.0",
+    "@azi-harness/spec-kit": "0.1.0-dev.0"
+  }
+}

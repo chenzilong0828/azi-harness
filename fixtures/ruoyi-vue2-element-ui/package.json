@@ -1,0 +1,17 @@
+{
+  "name": "ruoyi-vue2-example",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@8.19.4",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "eslint src"
+  },
+  "dependencies": {
+    "axios": "^0.27.2",
+    "element-ui": "^2.15.14",
+    "vue": "^2.6.14"
+  }
+}
+
