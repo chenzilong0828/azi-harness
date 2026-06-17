@@ -19,9 +19,11 @@
     "test:watch": "vitest",
     "azi": "node packages/cli/dist/bin.js"
   },
-  "devDependencies": {
+  "dependencies": {
     "@types/node": "^22.15.0",
-    "typescript": "^5.8.3",
+    "typescript": "^5.8.3"
+  },
+  "devDependencies": {
     "vitest": "^4.1.9"
   }
 }
