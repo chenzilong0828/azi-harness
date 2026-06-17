@@ -63,7 +63,7 @@
 ## 当前仓库结构
 
 - [README.md](../README.md)：总览和对外使用入口
-- [PRD-azi-harness.md](../PRD-azi-harness.md)：完整产品规划
+- [PRD-azi-harness.md](./PRD-azi-harness.md)：完整产品规划
 - [docs/README.md](./README.md)：文档中心
 - `packages/core`：运行时文件计划、清单、配置与扫描基础能力
 - `packages/detectors`：项目识别
@@ -147,7 +147,7 @@ npx azi-harness setup . --yes
 ## 新模型接手建议
 
 1. 先读本文件。
-2. 再读 [docs/PRD-azi-harness.md](./PRD-azi-harness.md) 和 [../PRD-azi-harness.md](../PRD-azi-harness.md)。
+2. 再读 [docs/PRD-azi-harness.md](./PRD-azi-harness.md)。
 3. 然后看：
    - [architecture.md](./architecture.md)
    - [cli.md](./cli.md)

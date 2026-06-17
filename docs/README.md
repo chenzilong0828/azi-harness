@@ -10,7 +10,7 @@
 ## 阅读顺序
 
 1. [MEMORY.md](./MEMORY.md)：给新模型和新协作者的快速接手记忆。
-2. [PRD 入口](./PRD-azi-harness.md)：在 `docs/` 内集中定位完整 PRD。
+2. [完整 PRD](./PRD-azi-harness.md)：查看产品规划正文。
 3. [产品范围](./product-scope.md)：确认目标、边界、已放弃方向和当前阶段。
 4. [系统架构](./architecture.md)：理解 workspace、核心包和运行时产物之间的关系。
 5. [CLI 使用说明](./cli.md)：查看当前已实现命令、常用参数和人工审查点。
@@ -24,7 +24,7 @@
 
 ## 权威来源
 
-- 当前完整产品规划正文仍以根目录 [PRD-azi-harness.md](../PRD-azi-harness.md) 为准。
-- `docs/PRD-azi-harness.md` 负责把 PRD 纳入文档中心入口，避免在 `docs/` 中“看不到 PRD”。
+- 当前完整产品规划正文位于 [PRD-azi-harness.md](./PRD-azi-harness.md)。
+- 根目录 [../PRD-azi-harness.md](../PRD-azi-harness.md) 只保留薄入口，避免在项目根和 `docs/` 下维护两份正文。
 - `docs/MEMORY.md` 负责交接上下文，不替代 PRD。
 - 如果文档与代码行为冲突，应以代码和测试结果为证据，随后修正文档。
