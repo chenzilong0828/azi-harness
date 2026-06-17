@@ -7,7 +7,9 @@
 ## 文档入口
 
 - 源码项目文档中心：[docs/README.md](./docs/README.md)
-- 完整产品规划：[PRD-azi-harness.md](./PRD-azi-harness.md)
+- PRD 文档入口：[docs/PRD-azi-harness.md](./docs/PRD-azi-harness.md)
+- 完整产品规划正文：[PRD-azi-harness.md](./PRD-azi-harness.md)
+- 模型交接记忆：[docs/MEMORY.md](./docs/MEMORY.md)
 
 ## 当前已实现范围
 

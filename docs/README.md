@@ -9,19 +9,22 @@
 
 ## 阅读顺序
 
-1. [产品范围](./product-scope.md)：确认目标、边界、已放弃方向和当前阶段。
-2. [系统架构](./architecture.md)：理解 workspace、核心包和运行时产物之间的关系。
-3. [CLI 使用说明](./cli.md)：查看当前已实现命令、常用参数和人工审查点。
-4. [运行时协议](./runtime-protocol.md)：理解 `AGENTS.md`、`.harness/`、`.agents/skills/`、`specs/` 的职责。
-5. [Skills 与规则](./skills-and-rules.md)：复核若依、HTWTable、Figma、`.harness/skill-map.json` 和外部 Skill 来源规则。
-6. [Figma 工作流](./figma-workflow.md)：查看 Figma 到规格的流程，以及 429 限流处理。
-7. [发布与 CI](./release-and-ci.md)：查看构建、测试、打包预检和 GitLab CI 接入方式。
-8. [真实项目试点计划](./pilot-plan.md)：把本地开发版推进到真实项目试点。
-9. [试点记录模板](./pilot-record-template.md)：记录每个真实项目的环境、结果和问题。
-10. [人工复检清单](./review-checklist.md)：阶段完成后按清单做人工验收。
+1. [MEMORY.md](./MEMORY.md)：给新模型和新协作者的快速接手记忆。
+2. [PRD 入口](./PRD-azi-harness.md)：在 `docs/` 内集中定位完整 PRD。
+3. [产品范围](./product-scope.md)：确认目标、边界、已放弃方向和当前阶段。
+4. [系统架构](./architecture.md)：理解 workspace、核心包和运行时产物之间的关系。
+5. [CLI 使用说明](./cli.md)：查看当前已实现命令、常用参数和人工审查点。
+6. [运行时协议](./runtime-protocol.md)：理解 `AGENTS.md`、`.harness/`、`.agents/skills/`、`specs/` 的职责。
+7. [Skills 与规则](./skills-and-rules.md)：复核若依、HTWTable、Figma、`.harness/skill-map.json` 和外部 Skill 来源规则。
+8. [Figma 工作流](./figma-workflow.md)：查看 Figma 到规格的流程，以及 429 限流处理。
+9. [发布与 CI](./release-and-ci.md)：查看构建、测试、打包预检和 GitLab CI 接入方式。
+10. [真实项目试点计划](./pilot-plan.md)：把本地开发版推进到真实项目试点。
+11. [试点记录模板](./pilot-record-template.md)：记录每个真实项目的环境、结果和问题。
+12. [人工复检清单](./review-checklist.md)：阶段完成后按清单做人工验收。
 
 ## 权威来源
 
-- 当前完整产品规划仍以根目录 [PRD-azi-harness.md](../PRD-azi-harness.md) 为准。
-- 本目录文档用于把 PRD 拆成更容易审查的实现说明。
+- 当前完整产品规划正文仍以根目录 [PRD-azi-harness.md](../PRD-azi-harness.md) 为准。
+- `docs/PRD-azi-harness.md` 负责把 PRD 纳入文档中心入口，避免在 `docs/` 中“看不到 PRD”。
+- `docs/MEMORY.md` 负责交接上下文，不替代 PRD。
 - 如果文档与代码行为冲突，应以代码和测试结果为证据，随后修正文档。
