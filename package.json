@@ -1,6 +1,6 @@
 {
   "name": "azi-harness",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Team-level AI coding runtime for frontend projects.",
   "type": "module",
   "bin": {

@@ -41,7 +41,7 @@ npx azi workflow advance --target specs/001-user-management --to plan
 npx azi sdd clarify --target specs/001-user-management --write
 npx azi sdd status --target specs/001-user-management
 npx azi check
-npx azi review --target specs/001-user-management --full --diff --evidence --write
+npx azi review --target specs/001-user-management --ci
 ```
 
 中文功能名请使用 `--slug` 提供稳定英文目录名。

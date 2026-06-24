@@ -9,6 +9,7 @@ import {
   resolveInsideRoot,
   type RuntimeFileIntent
 } from "@azi-harness/core";
+import { detectProject } from "@azi-harness/detectors";
 
 import {
   createAuditFindings,
@@ -22,6 +23,7 @@ import {
   runRuntimeDoctor,
   type DoctorReport
 } from "./doctor-runtime.js";
+import { createRuoyiGuardFindings } from "./ruoyi-guard.js";
 import { runSpecValidation } from "./spec-runtime.js";
 
 export type { GitReviewState, ReviewFinding, ReviewFindingSeverity } from "./review-audit.js";
@@ -34,6 +36,7 @@ export interface ReviewReport {
   options: {
     includeDiff: boolean;
     requireEvidence: boolean;
+    ci: boolean;
   };
   doctor: DoctorReport;
   checks: IntegratedCheckReport;
@@ -48,6 +51,7 @@ export interface CreateReviewOptions {
   root: string;
   target?: string;
   quick: boolean;
+  ci?: boolean;
   diff?: boolean;
   evidence?: boolean;
   generatedAt?: string;
@@ -62,13 +66,15 @@ export interface ReviewProposalWriteReport {
 export async function createReviewReport(options: CreateReviewOptions): Promise<ReviewReport> {
   const root = path.resolve(options.root);
   const generatedAt = options.generatedAt ?? new Date().toISOString();
-  const includeDiff = options.diff ?? false;
-  const requireEvidence = options.evidence ?? false;
+  const ci = options.ci ?? false;
+  const includeDiff = ci ? true : options.diff ?? false;
+  const requireEvidence = ci ? true : options.evidence ?? false;
   const doctor = await runRuntimeDoctor(root);
   const checks = await runIntegratedChecks(root, {
     quick: options.quick,
     env: process.env
   });
+  const profile = await detectProject(root);
   const targetSpec = options.target === undefined
     ? null
     : await runSpecValidation(root, options.target);
@@ -76,9 +82,17 @@ export async function createReviewReport(options: CreateReviewOptions): Promise<
   const specAudit = options.target === undefined
     ? null
     : await inspectReviewSpec(root, options.target, git, checks);
+  const ruoyiFindings = profile.effective.ruoyi.value
+    ? await createRuoyiGuardFindings({
+      root,
+      git,
+      target: options.target ?? null
+    })
+    : [];
   const findings = deduplicateFindings([
     ...createBaseFindings(doctor, checks, targetSpec, options.target ?? null),
     ...git.warnings.map((warning) => finding("warning", "git", "git-command-warning", warning)),
+    ...ruoyiFindings,
     ...createAuditFindings({
       target: options.target ?? null,
       git,
@@ -101,7 +115,7 @@ export async function createReviewReport(options: CreateReviewOptions): Promise<
     generatedAt,
     target: options.target ?? null,
     recommendation,
-    options: { includeDiff, requireEvidence },
+    options: { includeDiff, requireEvidence, ci },
     doctor,
     checks,
     targetSpec,
@@ -179,6 +193,7 @@ export function createReviewMarkdown(report: ReviewReport): string {
     `- 项目根目录：${report.root}`,
     `- 目标规格：${report.target ?? "未指定"}`,
     `- 建议结论：${formatRecommendation(report.recommendation)}`,
+    `- CI 模式：${report.options.ci ? "已启用" : "未启用"}`,
     `- 检查模式：${report.checks.quick ? "quick" : "full"}`,
     `- Diff 证据：${report.options.includeDiff ? "已启用" : "未启用"}`,
     `- 严格验收证据：${report.options.requireEvidence ? "已启用" : "未启用"}`,

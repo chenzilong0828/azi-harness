@@ -1,6 +1,6 @@
 {
   "name": "azi-harness",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Install and maintain the azi-harness AI coding runtime.",
   "type": "module",
   "bin": {

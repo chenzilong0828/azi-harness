@@ -710,7 +710,9 @@ async function runReview(args: string[]): Promise<void> {
     process.stdout.write(createReviewMarkdown(report));
   }
 
-  process.exitCode = report.recommendation === "blocked" ? 2 : 0;
+  process.exitCode = options.ci
+    ? report.recommendation === "ready" ? 0 : 2
+    : report.recommendation === "blocked" ? 2 : 0;
 }
 
 async function runSdd(args: string[]): Promise<void> {
@@ -1427,7 +1429,7 @@ function printHelp(): void {
     "  azi workflow status [root] [--json]",
     "  azi workflow advance [root] --target <spec-path> --to <stage> [--force --reason <text>] [--json]",
     "  azi workflow log [root] --target <spec-path> [--json]",
-    "  azi review [path] [--target <spec-path>] [--diff] [--evidence] [--suggest-patch] [--write] [--json] [--full]",
+    "  azi review [path] [--target <spec-path>] [--ci] [--diff] [--evidence] [--suggest-patch] [--write] [--json] [--full]",
     "  azi sdd <clarify|prd|issues|tasks|acceptance|retrospective|status> [root] --target <spec-path> [--write] [--json]",
     "  azi figma <figma-node-url> [root] [--feature <name>] [--slug <feature-slug>] [--yes] [--apply] [--json]",
     "  azi figma spec [root] --target <spec-path> --url <figma-node-url> [--write] [--json]",
@@ -1473,6 +1475,7 @@ function printHelp(): void {
     "  --write-proposals  Write reviewable patches into `.harness/proposals/`",
     "  --write     Write generated review or SDD auxiliary output",
     "  --full      Run project commands during `azi review`",
+    "  --ci        Fail on blocked or needs-review findings; implies --diff and --evidence",
     "  --diff      Include a bounded tracked Git diff in the Review report",
     "  --evidence  Require acceptance and command execution evidence",
     "  --suggest-patch  Write a reviewable acceptance suggestion patch",

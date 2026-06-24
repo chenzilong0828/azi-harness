@@ -18,7 +18,7 @@ npx azi-harness setup . --yes
 npx azi workflow start <feature-name> --task "<任务描述>" --yes
 npx azi workflow status
 npx azi check
-npx azi review --target specs/<id-feature> --full --diff --evidence --write
+npx azi review --target specs/<id-feature> --ci
 npx azi commit prepare --target specs/<id-feature>
 ```
 

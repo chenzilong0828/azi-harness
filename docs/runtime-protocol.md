@@ -152,12 +152,14 @@ npx azi skill install-guide obra/superpowers
 
 ```bash
 npx azi review --target specs/<id-feature> --full --diff --evidence --write
+npx azi review --target specs/<id-feature> --ci
 ```
 
-该命令会聚合 runtime doctor、规格追踪、规则检查、staged/unstaged/untracked 变更、任务文件范围、验收证据和检查摘要，并把报告写入 `.harness/reviews/`。
+普通审查命令会聚合 runtime doctor、规格追踪、规则检查、staged/unstaged/untracked 变更、任务文件范围、验收证据和检查摘要，并可把报告写入 `.harness/reviews/`。
 
 - `--diff`：附带受长度限制的 tracked diff；untracked 文件只列路径，不伪造 diff。
 - `--evidence`：严格检查 ACC 完成状态、证据文件引用和 lint/test/build 真实执行结果。
+- `--ci`：隐含 `--diff` 和 `--evidence`；error 或 warning 都会非 0 退出。若依项目会阻断未经证据确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据的改动。
 - `--suggest-patch`：只在 `.harness/proposals/` 生成 acceptance.md 的统一 diff 建议，不直接修改任何规格或业务文件。
 - 未指定 `--target` 时必须产生风险提示；error 级 finding 必须返回非零退出码。
 - 规格沉默时不能虚构意图；只能提示缺少声明，等待人工补充。

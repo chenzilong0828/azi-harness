@@ -332,7 +332,11 @@ function createEvidenceFindings(
         evidence: command.recorded ?? "失败",
         suggestion: "修复失败项并重新执行，不得在失败状态下交付。"
       });
-    } else if (requireEvidence && (command.actualStatus === "skipped" || command.actualStatus === "not-run")) {
+    } else if (
+      requireEvidence
+      && (command.actualStatus === "skipped" || command.actualStatus === "not-run")
+      && !(command.recordedStatus === "skipped" && command.actualReason !== null)
+    ) {
       findings.push({
         severity: "warning",
         area: "commands",

@@ -51,7 +51,7 @@ azi workflow start <feature-name> [root] [--task <description>] [--slug <feature
 azi workflow status [root] [--json]
 azi workflow advance [root] --target <spec-path> --to <stage> [--force --reason <text>] [--json]
 azi workflow log [root] --target <spec-path> [--json]
-azi review [path] [--target <spec-path>] [--diff] [--evidence] [--suggest-patch] [--write] [--json] [--full]
+azi review [path] [--target <spec-path>] [--ci] [--diff] [--evidence] [--suggest-patch] [--write] [--json] [--full]
 azi sdd <clarify|prd|issues|tasks|acceptance|retrospective> [root] --target <spec-path> [--write] [--json]
 azi sdd status [root] --target <spec-path> [--json]
 azi figma <figma-node-url> [root] [--feature <name>] [--slug <feature-slug>] [--yes] [--apply] [--json]
@@ -377,6 +377,7 @@ Review v2 会：
 - 读取 `REQ/TASK/ACC`、tasks.md 的文件声明、HTWTable 决策、acceptance.md 和 evidence/。
 - 对比规格声明范围与实际实现文件，标识普通超范围和敏感超范围变更。
 - 检查 acceptance.md 是否把未执行的 lint/test/build 写成通过。
+- 若依项目会检查本次变更里未经项目事实或规格确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据。
 - 每条关键 finding 可包含文档意图、实现证据和处理建议。
 
 默认情况下，`review` 使用 quick 模式，不执行项目 lint/test/build。`--evidence` 会诚实报告这些命令未在本次 Review 中执行；需要实际执行项目命令时使用：
@@ -384,6 +385,14 @@ Review v2 会：
 ```bash
 npm run azi -- review . --target specs/001-user-management --full --diff --evidence --write
 ```
+
+CI / MR 守门员模式：
+
+```bash
+npm run azi -- review . --target specs/001-user-management --ci
+```
+
+`--ci` 隐含 `--diff` 和 `--evidence`。普通 `review` 只有 error 才退出码 2；`--ci` 下 error 和 warning 都会退出码 2，适合接入 GitLab CI 或 MR 检查。
 
 生成可审查建议补丁：
 

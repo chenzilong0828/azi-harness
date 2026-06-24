@@ -25,6 +25,7 @@ const COMMAND_ROLES = ["lint", "test", "build"] as const;
 type CommandRole = typeof COMMAND_ROLES[number];
 type CommandSource = "config" | "detected" | "missing";
 type CommandStatus = "passed" | "failed" | "skipped";
+type CommandScope = "all" | "changed-source";
 
 export interface RuleFinding {
   ruleId: string;
@@ -266,6 +267,7 @@ async function runProjectCommandChecks(
   const warnings: string[] = [];
   const errors: string[] = [];
   const results: ProjectCommandResult[] = [];
+  const changedSourceFilesByRole = new Map<CommandRole, string[]>();
 
   for (const role of COMMAND_ROLES) {
     const selection = resolveCommandSelection(role, profile, config);
@@ -303,8 +305,19 @@ async function runProjectCommandChecks(
       continue;
     }
 
-    const command = formatPackageManagerCommand(packageManager, selection.script);
-    const execution = await runPackageScript(root, packageManager, selection.script, env);
+    const extraArgs = await resolveCommandArguments(root, role, selection.scope, changedSourceFilesByRole);
+    if (selection.scope === "changed-source" && extraArgs.length === 0) {
+      results.push(createSkippedCommandResult(
+        role,
+        selection,
+        `No changed source files were found for the ${role} command.`,
+        packageManager
+      ));
+      continue;
+    }
+
+    const command = formatPackageManagerCommand(packageManager, selection.script, extraArgs);
+    const execution = await runPackageScript(root, packageManager, selection.script, env, extraArgs);
     const result: ProjectCommandResult = {
       role,
       status: execution.exitCode === 0 ? "passed" : "failed",
@@ -344,6 +357,7 @@ function resolveCommandSelection(
   source: CommandSource;
   enabled: boolean;
   reason: string | null;
+  scope: CommandScope;
 } {
   const commandConfig = isRecord(config?.commands) ? config.commands : {};
   const checksConfig = isRecord(config?.checks) ? config.checks : {};
@@ -355,13 +369,15 @@ function resolveCommandSelection(
   const reason = typeof commandCheck?.reason === "string" && commandCheck.reason.trim() !== ""
     ? commandCheck.reason.trim()
     : null;
+  const scope = commandCheck?.scope === "changed-source" ? "changed-source" : "all";
 
   if (configuredScript !== null) {
     return {
       script: configuredScript,
       source: "config",
       enabled,
-      reason
+      reason,
+      scope
     };
   }
 
@@ -370,7 +386,8 @@ function resolveCommandSelection(
       script: detectedScript,
       source: "detected",
       enabled,
-      reason
+      reason,
+      scope
     };
   }
 
@@ -378,7 +395,8 @@ function resolveCommandSelection(
     script: null,
     source: "missing",
     enabled,
-    reason
+    reason,
+    scope
   };
 }
 
@@ -451,13 +469,14 @@ async function runPackageScript(
   root: string,
   packageManager: PackageManager | "unknown",
   script: string,
-  env: NodeJS.ProcessEnv
+  env: NodeJS.ProcessEnv,
+  extraArgs: string[] = []
 ): Promise<{
   exitCode: number | null;
   durationMs: number;
   output: string | null;
 }> {
-  const spawnCommand = createSpawnCommand(packageManager, script);
+  const spawnCommand = createSpawnCommand(packageManager, script, extraArgs);
   const startedAt = Date.now();
 
   return new Promise((resolve) => {
@@ -505,13 +524,14 @@ async function runPackageScript(
 
 function createSpawnCommand(
   packageManager: PackageManager | "unknown",
-  script: string
+  script: string,
+  extraArgs: string[] = []
 ): {
   file: string;
   args: string[];
 } {
   const executable = packageManagerExecutable(packageManager);
-  const args = packageManagerArguments(script);
+  const args = packageManagerArguments(script, extraArgs);
 
   if (process.platform !== "win32") {
     return {
@@ -538,8 +558,8 @@ function packageManagerExecutable(packageManager: PackageManager | "unknown"): s
   return packageManager === "unknown" ? "npm" : packageManager;
 }
 
-function packageManagerArguments(script: string): string[] {
-  return ["run", script];
+function packageManagerArguments(script: string, extraArgs: string[] = []): string[] {
+  return extraArgs.length === 0 ? ["run", script] : ["run", script, "--", ...extraArgs];
 }
 
 function quoteForCmd(value: string): string {
@@ -549,9 +569,11 @@ function quoteForCmd(value: string): string {
 
 function formatPackageManagerCommand(
   packageManager: PackageManager | "unknown",
-  script: string
+  script: string,
+  extraArgs: string[] = []
 ): string {
-  return `${packageManager === "unknown" ? "npm" : packageManager} run ${script}`;
+  const base = `${packageManager === "unknown" ? "npm" : packageManager} run ${script}`;
+  return extraArgs.length === 0 ? base : `${base} -- ${extraArgs.join(" ")}`;
 }
 
 function normalizePackageManager(value: PackageManager): PackageManager | "unknown" {
@@ -569,6 +591,95 @@ function truncateOutput(output: string): string | null {
 
 function isSourceFile(relativePath: string): boolean {
   return SOURCE_EXTENSIONS.has(path.extname(relativePath).toLowerCase());
+}
+
+async function resolveCommandArguments(
+  root: string,
+  role: CommandRole,
+  scope: CommandScope,
+  cache: Map<CommandRole, string[]>
+): Promise<string[]> {
+  if (scope === "all") {
+    return [];
+  }
+
+  if (role !== "lint") {
+    return [];
+  }
+
+  const cached = cache.get(role);
+  if (cached !== undefined) {
+    return cached;
+  }
+
+  const files = await listChangedSourceFiles(root);
+  cache.set(role, files);
+  return files;
+}
+
+async function listChangedSourceFiles(root: string): Promise<string[]> {
+  const tracked = await runGitLines(root, ["diff", "--name-only", "--diff-filter=ACMR", "HEAD", "--"]);
+  const untracked = await runGitLines(root, ["ls-files", "--others", "--exclude-standard"]);
+  return [...new Set([...tracked, ...untracked])]
+    .filter((file) => isSourceFile(file))
+    .map((file) => file.replace(/\\/g, "/"))
+    .sort((left, right) => left.localeCompare(right));
+}
+
+async function runGitLines(root: string, args: string[]): Promise<string[]> {
+  const result = await runRawCommand(root, "git", args);
+  if (result.exitCode !== 0 || result.output === null) {
+    return [];
+  }
+
+  return result.output
+    .split(/\r?\n/u)
+    .map((line) => line.trim())
+    .filter((line) => line !== "");
+}
+
+async function runRawCommand(
+  root: string,
+  file: string,
+  args: string[]
+): Promise<{
+  exitCode: number | null;
+  output: string | null;
+}> {
+  return new Promise((resolve) => {
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+    const child = spawn(file, args, {
+      cwd: root,
+      shell: false,
+      windowsHide: true
+    });
+
+    child.stdout?.on("data", (chunk: Buffer | string) => {
+      stdout += String(chunk);
+    });
+    child.stderr?.on("data", (chunk: Buffer | string) => {
+      stderr += String(chunk);
+    });
+    child.on("error", (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve({ exitCode: null, output: String(error) });
+    });
+    child.on("close", (code) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      resolve({
+        exitCode: code,
+        output: [stdout, stderr].filter((value) => value.trim() !== "").join("\n")
+      });
+    });
+  });
 }
 
 async function readProjectProfile(root: string): Promise<ProjectProfile | null> {

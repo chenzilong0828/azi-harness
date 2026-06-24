@@ -70,7 +70,9 @@
 - [ ] `npm run pack:check` 通过。
 - [ ] CLI 关键命令有测试覆盖。
 - [ ] `azi review --target specs/<id-feature> --full --diff --evidence --write` 能生成交付前审查报告。
+- [ ] `azi review --target specs/<id-feature> --ci` 能在 CI/MR 中阻断 error 和 warning。
 - [ ] Review 同时识别 staged、unstaged 和 untracked 文件。
+- [ ] 若依项目能阻断未经证据确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据的改动。
 - [ ] tasks.md 声明文件与实际变更范围一致，敏感超范围变更已人工处理。
 - [ ] acceptance.md 没有把未执行的 lint/test/build 写成通过。
 - [ ] `--suggest-patch` 只写入 `.harness/proposals/`，没有直接修改业务或规格文件。

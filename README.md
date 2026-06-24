@@ -61,6 +61,7 @@ npx azi-harness task "请依照这个 Figma 页面开发：<url>"
 - SDD 辅助文档默认只预览；加 `--write` 后写入 `specs/<id-feature>/sdd/`，已有不同内容会冲突退出，不静默覆盖。
 - 提供 `azi figma <url> --yes` 和 `azi figma spec/cache/status/fallback`，记录节点级 Figma 来源、缓存 429 / fallback 信息、下载 SVG、寻找相似页面、生成 Codex 实现上下文、候选实现补丁和 quick check 结果。
 - 提供 Review v2：对比规格意图与 staged、unstaged、untracked 变更，检查超范围文件、验收证据和命令结果声明。
+- 提供 `azi review --ci` 守门员模式：CI/MR 中遇到 error 或 warning 都会非 0 退出；若依项目会阻断未经证据确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据的改动。
 - `azi review --suggest-patch` 只在 `.harness/proposals/` 生成 acceptance 建议补丁，不直接修改业务或规格文件。
 - 创建和校验功能规格目录。
 - `spec validate` 会校验规格章节结构、关键字段是否填入、`screens.yaml` 的来源与降级记录。
@@ -119,6 +120,7 @@ npm run azi -- skill match "根据 Figma 节点还原页面并完成视觉验收
 npm run azi -- skill doctor
 npm run azi -- skill install-guide obra/superpowers
 npm run azi -- review . --target specs/001-user-management --full --diff --evidence --write
+npm run azi -- review . --target specs/001-user-management --ci
 npm run azi -- review . --target specs/001-user-management --suggest-patch
 npm run azi -- check . --quick
 npm run azi -- doctor . --write-proposals
@@ -156,7 +158,7 @@ azi figma status --target <spec-path>
 azi figma fallback --target <spec-path> --source <figma-export|screenshot|legacy-page> --reference <path-or-url> [--retried-at <time>] [--write]
 azi task <user-task> [--apply]
 azi go <user-task> [--apply]
-azi review [--diff] [--evidence] [--suggest-patch]
+azi review [--ci] [--diff] [--evidence] [--suggest-patch]
 azi context <task-description>
 azi htw inspect
 azi skill list
@@ -220,6 +222,7 @@ target-project/
 - 使用 `azi skill list` 查看目录、`azi skill search <关键词>` 搜索来源、`azi skill doctor` 校验目录与匹配表；只需要查看任务推荐与回避原因时运行 `azi skill match "<任务描述>"`。
 - Skill 的真实全局安装状态不能由项目目录可靠读取，因此统一标为“未验证”；`azi skill install-guide <source-id>` 只给安装提示，不会修改全局环境。
 - 交付前运行 `azi review --target specs/<id-feature> --full --diff --evidence --write`，把审查记录写入 `.harness/reviews/`。
+- CI/MR 中运行 `azi review --target specs/<id-feature> --ci`；它隐含 `--diff` 和 `--evidence`，并且 warning 也会阻塞。若依项目会阻断凭空新增 API、权限、字典、绕过请求封装和缺少 HTWTable 证据。
 - `--diff` 在报告中附带受长度限制的 tracked diff；`--evidence` 严格核对 ACC、evidence 文件和 lint/test/build 的真实结果；未执行的命令不能写成通过。
 - Review 会读取 tasks.md 的 `Files / 文件` 声明并与 Git 变更比对；路由、权限、store、请求封装和包配置等敏感超范围变更会阻塞交付。
 - 大功能工作流优先考虑 `obra/superpowers`；Figma 相关工作优先使用 `figma` / `figma-use` / `figma-implement-design`。

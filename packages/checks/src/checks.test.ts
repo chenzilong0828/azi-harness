@@ -1,4 +1,5 @@
 import { chmod, cp, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
@@ -42,6 +43,22 @@ describe("integrated checks", () => {
   it("runs lint, test, and build through the detected package manager", async () => {
     const root = await initializedFixture(fixtureVue3);
     await createFeatureSpec(root, "audit-log");
+    await writeFile(
+      path.join(root, ".harness/config.json"),
+      JSON.stringify({
+        schemaVersion: "1",
+        checks: {
+          runProjectCommands: true,
+          commands: {
+            lint: { enabled: true, reason: null, scope: "all" },
+            test: { enabled: true, reason: null },
+            build: { enabled: true, reason: null }
+          }
+        },
+        commands: { lint: "lint", test: "test", build: "build" },
+        overrides: []
+      }, null, 2)
+    );
     const env = await createFakePackageManagerEnvironment(root, {
       lint: 0,
       test: 0,
@@ -72,6 +89,47 @@ describe("integrated checks", () => {
     expect(report.valid).toBe(false);
     expect(report.commands.errors).toContain("test command failed: npm run test");
     expect(report.commands.results.find((result) => result.role === "test")?.status).toBe("failed");
+  });
+
+  it("can scope lint to changed source files", async () => {
+    const root = await initializedFixture(fixtureVue3);
+    await createFeatureSpec(root, "audit-log");
+    await runGit(root, ["init"]);
+    await runGit(root, ["config", "user.email", "test@example.com"]);
+    await runGit(root, ["config", "user.name", "Test User"]);
+    await runGit(root, ["add", "."]);
+    await runGit(root, ["commit", "-m", "initial"]);
+    await writeFile(
+      path.join(root, "src/views/system/role/index.vue"),
+      "<template><div>changed</div></template>\n"
+    );
+    await writeFile(
+      path.join(root, ".harness/config.json"),
+      JSON.stringify({
+        schemaVersion: "1",
+        checks: {
+          runProjectCommands: true,
+          commands: {
+            lint: { enabled: true, reason: null, scope: "changed-source" },
+            test: { enabled: true, reason: null },
+            build: { enabled: true, reason: null }
+          }
+        },
+        commands: { lint: "lint", test: "test", build: "build" },
+        overrides: []
+      }, null, 2)
+    );
+    const env = await createFakePackageManagerEnvironment(root, {
+      lint: 0,
+      test: 0,
+      build: 0
+    });
+
+    const report = await runIntegratedChecks(root, { env });
+    const lint = report.commands.results.find((result) => result.role === "lint");
+
+    expect(lint?.status).toBe("passed");
+    expect(lint?.command).toContain("-- src/views/system/role/index.vue");
   });
 
   it("warns when a disabled command has no reason", async () => {
@@ -348,4 +406,29 @@ async function createFakePackageManagerEnvironment(
     ...process.env,
     PATH: `${binDir}${path.delimiter}${process.env.PATH ?? ""}`
   };
+}
+
+async function runGit(root: string, args: string[]): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("git", args, {
+      cwd: root,
+      shell: false,
+      windowsHide: true
+    });
+    let output = "";
+    child.stdout?.on("data", (chunk: Buffer | string) => {
+      output += String(chunk);
+    });
+    child.stderr?.on("data", (chunk: Buffer | string) => {
+      output += String(chunk);
+    });
+    child.on("error", reject);
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+        return;
+      }
+      reject(new Error(`git ${args.join(" ")} failed: ${output}`));
+    });
+  });
 }

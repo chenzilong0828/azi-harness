@@ -90,7 +90,7 @@ export function createAgentsEntry(profile: ProjectProfile): string {
     "禁止读取或套用 `.windsurfrules`。",
     "禁止猜测接口、权限标识、字典类型或后端字段。",
     "若依项目的权限、字典、请求封装、分页、路由、菜单和 HTWTable 必须来自项目事实与相似页面。",
-    "交付前运行 `npx azi check` 或 quick check，并运行 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`；输出阻塞项。"
+    "交付前运行 `npx azi check` 或 quick check；CI/MR 中运行 `npx azi review --target specs/<id-feature> --ci`，输出并阻断问题。"
   ].join("\n");
 }
 
@@ -115,7 +115,8 @@ function createConfig(profile: ProjectProfile): Record<string, unknown> {
       commands: {
         lint: {
           enabled: true,
-          reason: null
+          reason: null,
+          scope: "changed-source"
         },
         test: {
           enabled: true,
@@ -209,7 +210,8 @@ function createCommandsDocument(profile: ProjectProfile): string {
     "",
     formatCommandSection("构建命令", commands.build),
     "",
-    "`azi check` 会分别执行已配置的 lint、test、build 脚本一次。",
+    "`azi check` 会分别执行已配置的 lint、test、build 脚本一次；默认 lint 只检查本次 Git 变更的源码文件，避免老项目全量格式债阻塞新需求。",
+    "如需全量 lint，可把 `.harness/config.json -> checks.commands.lint.scope` 改为 `all`。",
     "`azi check --quick` 会跳过项目命令，只保留运行时、规格和规则检查。",
     "`azi task \"<用户原话>\"` 是统一自然语言入口；检测到 Figma URL 时自动走 Figma 缓存、相似页面、Skill 匹配、实现上下文和 quick check；检测到 HTWTable 或检查意图时自动收集 API 证据或运行 quick check；检测到普通开发、修改、修复任务时自动创建或复用 workflow/spec。",
     "`azi go \"<用户原话>\"` 是 `azi task` 的别名，文档默认只推荐 `azi task`。",
@@ -224,6 +226,7 @@ function createCommandsDocument(profile: ProjectProfile): string {
     "`azi figma spec --target specs/<id-feature> --url <figma-node-url> --write` 会缓存节点级 Figma 来源，并生成 screens.yaml / design.md 的建议补丁。",
     "`azi figma fallback --target specs/<id-feature> --source screenshot --reference <path> --write` 会记录 429 或无 Figma 时的降级来源。",
     "`azi figma status --target specs/<id-feature>` 会查看 `.harness/figma-cache/` 中的来源、重试和降级状态。",
+    "`azi review --target specs/<id-feature> --ci` 是 CI/MR 守门员模式，隐含 diff/evidence，warning 也会阻塞；若依项目会检查未经证据确认的 API、权限、字典、请求封装和 HTWTable。",
     "`azi review --target specs/<id-feature> --full --diff --evidence --write` 会执行项目命令、对比规格范围、Git 变更和验收证据，并把报告写入 `.harness/reviews/`。",
     "`azi review --target specs/<id-feature> --suggest-patch` 只会把 acceptance.md 建议补丁写入 `.harness/proposals/`，不会修改业务文件。",
     "`azi doctor --write-proposals` 会把可人工审查的运行时修复补丁写入 `.harness/proposals/`。",
@@ -261,7 +264,7 @@ function createWorkflowDocument(): string {
     "5. `coding`：按规格和项目规则实现，不能跳过未知项直接编码。",
     "6. `test`：补充 `acceptance.md`，让 ACC 关联 REQ，并记录真实检查结果和人工验收证据。",
     "7. `quality`：运行 `npx azi check`，没有执行的检查必须记录跳过原因。",
-    "8. `review`：运行 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`，核对 staged、unstaged、untracked 变更与规格证据。",
+    "8. `review`：CI/MR 运行 `npx azi review --target specs/<id-feature> --ci`；人工交付记录可运行 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`。",
     "9. `commit`：准备提交说明或 MR 文案，并可生成 `sdd/retrospective.md`；azi-harness 默认不自动提交、推送或创建 MR。",
     "",
     "不要从模糊需求直接跳到编码，也不要在项目内临时发明业务 Skill。"
@@ -305,7 +308,7 @@ function createGitLabCiExample(): string {
     "    - npm ci",
     "    - |",
     "      if [ -n \"$AZI_REVIEW_TARGET\" ]; then",
-    "        npx azi review --target \"$AZI_REVIEW_TARGET\" --full --diff --evidence --write",
+    "        npx azi review --target \"$AZI_REVIEW_TARGET\" --ci",
     "      else",
     "        echo \"Skip azi review: set AZI_REVIEW_TARGET=specs/<id-feature> to enable it.\"",
     "      fi",
@@ -345,7 +348,7 @@ function createAiToolsDocument(profile: ProjectProfile): string {
     "- `azi task` 会自动判断 Figma URL、HTWTable、质量检查、workflow、Skill match、figma cache、similar pages 和 quick check；默认不 `--apply`。",
     "- 非 Figma 新功能、修改、修复也优先运行 `npx azi task \"<用户原话>\"`；已有规格任务可运行 `npx azi context \"<任务描述>\"`。",
     "- Skills：先用 `npx azi skill list/search/match` 浏览和匹配来源，再使用当前工具中已安装的匹配 Skill。",
-    "- 交付前：运行 `npx azi check` 和 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`。",
+    "- 交付前：运行 `npx azi check`；CI/MR 使用 `npx azi review --target specs/<id-feature> --ci`，人工留档可加 `--write`。",
     "",
     "## Cursor",
     "",
@@ -404,7 +407,7 @@ function createCursorRule(profile: ProjectProfile): string {
     "禁止读取或套用 `.windsurfrules`。",
     "禁止猜测接口、权限标识、字典类型或后端字段。",
     "若依项目的权限、字典、请求封装、分页、路由、菜单和 HTWTable 必须来自项目事实与相似页面。",
-    "交付前运行 `npx azi check` 和 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`。"
+    "交付前运行 `npx azi check`；CI/MR 运行 `npx azi review --target specs/<id-feature> --ci`。"
   ].join("\n");
 }
 
@@ -503,7 +506,8 @@ function createQualityRules(): string {
     "- 如果在 `.harness/config.json` 中禁用某个项目命令，必须记录原因。",
     "- 使用 `npx azi doctor --write-proposals` 生成可审查的运行时修复补丁。",
     "- 用真实执行结果更新 `tasks.md` 和 `acceptance.md`。",
-    "- 交付前使用 `npx azi review --target specs/<id-feature> --full --diff --evidence --write` 生成审查报告。",
+    "- CI/MR 使用 `npx azi review --target specs/<id-feature> --ci` 阻断 error 和 warning；若依项目会阻断未经证据确认的 API、权限、字典、请求封装和 HTWTable 问题。",
+    "- 交付前可使用 `npx azi review --target specs/<id-feature> --full --diff --evidence --write` 生成审查报告。",
     "- `--suggest-patch` 只生成 `.harness/proposals/` 下的统一 diff，必须人工复核，不自动应用。",
     "- 没有实际执行的检查，不能声称已通过。",
     "- 权限、破坏性操作和共享代码必须经过人工 Review。"

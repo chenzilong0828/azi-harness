@@ -129,6 +129,7 @@
 - `workflow start/status/advance/log`：创建、跟踪和审计功能开发阶段
 - Review v2：采集 staged/unstaged/untracked，消费规格追踪、任务文件范围、HTWTable 决策和验收证据
 - `review --diff --evidence`：检查超范围文件、证据引用和命令结果声明
+- `review --ci`：CI/MR 守门员模式，隐含 diff/evidence，error 和 warning 都阻塞；若依项目会检查未经证据确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据的改动
 - `review --suggest-patch`：只生成 `.harness/proposals/*-review.patch`，不直接修改 acceptance.md 或业务代码
 
 ## 当前稳定入口

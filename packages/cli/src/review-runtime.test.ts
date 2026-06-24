@@ -163,6 +163,56 @@ describe("review runtime", () => {
     }));
     expect(report.recommendation).toBe("blocked");
   });
+
+  it("blocks unverified RuoYi API, permission, dict, and request wrapper bypasses", async () => {
+    const root = await initializedFixture();
+    await startReadyWorkflow(root);
+    await initializeGit(root);
+
+    await mkdir(path.join(root, "src/api/system"), { recursive: true });
+    await writeFile(path.join(root, "src/api/system/log.ts"), [
+      "import request from '@/utils/request';",
+      "",
+      "export function fakeLogList() {",
+      "  return request({",
+      "    url: '/system/log/fake-list',",
+      "    method: 'get'",
+      "  });",
+      "}",
+      ""
+    ].join("\n"), "utf8");
+    await mkdir(path.join(root, "src/views/system/log"), { recursive: true });
+    await writeFile(path.join(root, "src/views/system/log/index.vue"), [
+      "<script setup lang=\"ts\">",
+      "import axios from 'axios';",
+      "const query = { dictType: 'fake_status' };",
+      "axios.get('/system/log/bypass');",
+      "</script>",
+      "<template>",
+      "  <button v-hasPermi=\"['system:log:fake']\">Fake</button>",
+      "</template>",
+      ""
+    ].join("\n"), "utf8");
+
+    const report = await createReviewReport({
+      root,
+      target: "specs/001-audit-log",
+      quick: true,
+      ci: true,
+      generatedAt: "2026-06-24T06:07:08.009Z"
+    });
+
+    expect(report.options.ci).toBe(true);
+    expect(report.options.includeDiff).toBe(true);
+    expect(report.options.requireEvidence).toBe(true);
+    expect(report.findings).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: "ruoyi-api-path-unverified" }),
+      expect.objectContaining({ code: "ruoyi-permission-unverified" }),
+      expect.objectContaining({ code: "ruoyi-dict-type-unverified" }),
+      expect.objectContaining({ code: "ruoyi-request-wrapper-bypassed" })
+    ]));
+    expect(report.recommendation).toBe("blocked");
+  }, 15_000);
 });
 
 async function initializedFixture(): Promise<string> {

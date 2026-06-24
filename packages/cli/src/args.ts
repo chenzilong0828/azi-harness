@@ -129,6 +129,7 @@ export interface ReviewArguments {
   target?: string;
   json: boolean;
   write: boolean;
+  ci: boolean;
   quick: boolean;
   diff: boolean;
   evidence: boolean;
@@ -716,6 +717,7 @@ export function parseReviewArguments(args: string[]): ReviewArguments {
   let target: string | undefined;
   let json = false;
   let write = false;
+  let ci = false;
   let quick = true;
   let diff = false;
   let evidence = false;
@@ -731,6 +733,10 @@ export function parseReviewArguments(args: string[]): ReviewArguments {
       json = true;
     } else if (argument === "--write") {
       write = true;
+    } else if (argument === "--ci") {
+      ci = true;
+      diff = true;
+      evidence = true;
     } else if (argument === "--full") {
       quick = false;
     } else if (argument === "--diff") {
@@ -763,8 +769,8 @@ export function parseReviewArguments(args: string[]): ReviewArguments {
   }
 
   return target === undefined
-    ? { root, json, write, quick, diff, evidence, suggestPatch }
-    : { root, target, json, write, quick, diff, evidence, suggestPatch };
+    ? { root, json, write, ci, quick, diff, evidence, suggestPatch }
+    : { root, target, json, write, ci, quick, diff, evidence, suggestPatch };
 }
 
 export function parseSddArguments(args: string[], subcommand: string): SddArguments {
