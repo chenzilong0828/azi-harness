@@ -44,7 +44,9 @@ describe("runtime initialization", () => {
     expect(created).toContain(".agents/skills/README.md");
     expect(created).toContain(".harness/docs/ai-tools.md");
     expect(created).toContain(".harness/skill-map.json");
+    expect(created).toContain(".harness/skill-catalog.json");
     expect(created).toContain(".harness/docs/skill-sources.md");
+    expect(created).toContain(".harness/docs/skill-hub.md");
     expect(created).toContain(".cursor/rules/azi-harness.mdc");
     expect(created).toContain(".harness/docs/gitlab-ci.example.yml");
 
@@ -58,6 +60,10 @@ describe("runtime initialization", () => {
     const cursorRule = await readFile(path.join(root, ".cursor/rules/azi-harness.mdc"), "utf8");
     expect(cursorRule).toContain("AGENTS.md");
     expect(cursorRule).toContain(".harness/project.json");
+
+    const gitlabCi = await readFile(path.join(root, ".harness/docs/gitlab-ci.example.yml"), "utf8");
+    expect(gitlabCi).toContain("azi:review:");
+    expect(gitlabCi).toContain("AZI_REVIEW_TARGET=specs/<id-feature>");
 
     const repeated = await prepareRuntimeInitialization(root);
     expect(repeated.status).toBe("already-initialized");

@@ -71,6 +71,38 @@ describe("runtime synchronization", () => {
     );
   });
 
+  it("adds Skill Hub files when synchronizing an older runtime manifest", async () => {
+    const root = await initializedFixture();
+    const newFiles = [
+      ".harness/skill-catalog.json",
+      ".harness/docs/skill-hub.md"
+    ];
+    for (const relativePath of newFiles) {
+      await unlink(path.join(root, relativePath));
+    }
+    const manifestPath = path.join(root, ".harness/manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8")) as {
+      files: Array<{ path: string }>;
+    };
+    manifest.files = manifest.files.filter((entry) => !newFiles.includes(entry.path));
+    await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
+
+    const prepared = await prepareRuntimeSynchronization(root);
+    for (const relativePath of newFiles) {
+      expect(
+        prepared.plan?.entries.find((entry) => entry.intent.path === relativePath)?.action
+      ).toBe("create");
+    }
+
+    await applyRuntimeWritePlan(prepared.plan!);
+    expect(await readFile(path.join(root, ".harness/skill-catalog.json"), "utf8")).toContain(
+      "not-verified-by-project-runtime"
+    );
+    expect(await readFile(path.join(root, ".harness/docs/skill-hub.md"), "utf8")).toContain(
+      "# Skill Hub"
+    );
+  });
+
   it("stops when a managed file was edited after initialization", async () => {
     const root = await initializedFixture();
     await writeFile(path.join(root, ".harness/rules/ruoyi.md"), "user changed\n");

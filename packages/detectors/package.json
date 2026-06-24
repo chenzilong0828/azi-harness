@@ -1,6 +1,6 @@
 {
   "name": "@azi-harness/detectors",
-  "version": "0.1.0-dev.0",
+  "version": "0.1.1",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,6 +14,6 @@
     "dist"
   ],
   "dependencies": {
-    "@azi-harness/core": "0.1.0-dev.0"
+    "@azi-harness/core": "0.1.1"
   }
 }

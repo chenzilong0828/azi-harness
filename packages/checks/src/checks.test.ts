@@ -137,6 +137,177 @@ async function createFeatureSpec(root: string, slug: string): Promise<void> {
   const prepared = await prepareSpecCreation(root, slug);
   const plan = await createRuntimeWritePlan(root, prepared.intents);
   await applyRuntimeWritePlan(plan);
+  await writeMinimalReadySpec(root, prepared.directoryName, slug);
+}
+
+async function writeMinimalReadySpec(root: string, directoryName: string, slug: string): Promise<void> {
+  const specRoot = path.join(root, "specs", directoryName);
+  await writeFile(
+    path.join(specRoot, "requirements.md"),
+    [
+      `# 需求：${directoryName}`,
+      "",
+      "## SDD 追踪",
+      "",
+      "- REQ-001：完成列表查询与分页。",
+      "",
+      "## 背景与目标",
+      "",
+      "- Background / 背景：验证检查命令。",
+      "- User goal / 用户目标：完成列表自检。",
+      "- Business goal / 业务目标：保证交付质量。",
+      "",
+      "## 用户角色",
+      "",
+      "- Roles / 角色：管理员。",
+      "",
+      "## 范围",
+      "",
+      "- In scope / 本次包含：列表。",
+      "- Out of scope / 本次不包含：新增。",
+      "",
+      "## 业务规则",
+      "",
+      "- Rules / 规则：遵守若依分页。",
+      "",
+      "## 已确认事实",
+      "",
+      "- APIs：已确认列表接口。",
+      "- Permissions / 权限：system:list。",
+      "- Dictionaries / 字典：无需新增。",
+      "",
+      "## 验收条件",
+      "",
+      "- [ ] 列表分页可用。",
+      "",
+      "## 未知项",
+      "",
+      "- 无。"
+    ].join("\n")
+  );
+  await writeFile(
+    path.join(specRoot, "design.md"),
+    [
+      `# 设计：${directoryName}`,
+      "",
+      "## 页面和模块边界",
+      "",
+      "- Route / 路由：/system/list",
+      "- Entry points / 入口：菜单。",
+      "- Modules / 模块：查询、列表。",
+      "",
+      "## 数据与请求",
+      "",
+      "- Data flow / 数据流：query -> request -> rows。",
+      "- Request mapping / 请求映射：listApi。",
+      "",
+      "## 接入与复用",
+      "",
+      "- Permission integration / 权限接入：v-hasPermi。",
+      "- Dictionary integration / 字典接入：无需新增。",
+      "- Feedback / Message / Download 复用：复用项目能力。",
+      "- Component choice / 组件选择：普通列表。",
+      "- HTWTable evaluation / HTWTable 评估：已评估。",
+      "",
+      "## 状态与交互",
+      "",
+      "- States / 状态：default、loading。",
+      "- Interactions / 交互：查询。",
+      "",
+      "## 实现约束",
+      "",
+      "- Vue constraints / Vue 约束：遵守项目 Vue 版本。",
+      "- Rollback / 回退方案：保留原实现。",
+      "",
+      "## 风险",
+      "",
+      "- [ ] 无阻断风险。"
+    ].join("\n")
+  );
+  await writeFile(
+    path.join(specRoot, "screens.yaml"),
+    [
+      "version: 1",
+      `feature: ${slug}`,
+      "source:",
+      "  type: legacy-page",
+      "  url: \"\"",
+      "  nodeId: \"\"",
+      "  reference: \"src/views/system/list/index.vue\"",
+      "  status: fallback",
+      "  retriedAt: \"\"",
+      "  fallback: \"same-project-list-page\"",
+      "  notes: \"test fixture\"",
+      "screens:",
+      "  - id: list",
+      "    route: \"/system/list\"",
+      "    title: \"列表\"",
+      "    states:",
+      "      - default",
+      "    regions: []",
+      "    interactions: []",
+      "    assets: []",
+      "unknowns: []",
+      ""
+    ].join("\n")
+  );
+  await writeFile(
+    path.join(specRoot, "tasks.md"),
+    [
+      `# 任务：${directoryName}`,
+      "",
+      "## 任务列表",
+      "",
+      "- [ ] TASK-001 完成列表",
+      "  - Requirement / 需求：REQ-001",
+      "  - Files / 文件：src/views/system/list/index.vue",
+      "  - Depends on / 前置：接口确认",
+      "  - Verify / 验证：azi check"
+    ].join("\n")
+  );
+  await writeFile(
+    path.join(specRoot, "acceptance.md"),
+    [
+      `# 验收：${directoryName}`,
+      "",
+      "## 功能验收",
+      "",
+      "- [ ] ACC-001 功能路径和核心操作已验证。",
+      "  - Requirement / 需求：REQ-001",
+      "  - Evidence / 证据：测试报告。",
+      "",
+      "## 权限验收",
+      "",
+      "- [ ] permission 行为已验证。",
+      "",
+      "## 字典与状态",
+      "",
+      "- [ ] 字典展示、loading、empty、error、normal 状态已验证。",
+      "",
+      "## 分页字段",
+      "",
+      "- [ ] pageNum/pageSize/rows/total 行为已验证。",
+      "",
+      "## 视觉对照",
+      "",
+      "- [ ] 已对照同类页面。",
+      "",
+      "## 检查结果",
+      "",
+      "- lint：待执行",
+      "- test：待执行",
+      "- build：待执行",
+      "",
+      "## Review 记录",
+      "",
+      "- Reviewer：待人工确认",
+      "- Notes：待人工确认",
+      "",
+      "## HTWTable 说明",
+      "",
+      "- Used / Exception：已评估。"
+    ].join("\n")
+  );
 }
 
 async function createFakePackageManagerEnvironment(

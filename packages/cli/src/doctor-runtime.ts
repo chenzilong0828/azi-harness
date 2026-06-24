@@ -6,6 +6,8 @@ import {
   pathExists,
   readJsonObject,
   readRuntimeManifest,
+  validateSkillMap,
+  validateSkillCatalog,
   type ProjectProfile,
   resolveInsideRoot,
   sha256
@@ -41,6 +43,13 @@ export async function runRuntimeDoctor(rootInput: string): Promise<DoctorReport>
     const absolutePath = resolveInsideRoot(root, file.path);
     if (!(await pathExists(absolutePath))) {
       errors.push(`Tracked runtime file is missing: ${file.path}`);
+      continue;
+    }
+    if (file.ownership === "managed") {
+      const content = await readFile(absolutePath, "utf8");
+      if (sha256(content) !== file.sha256) {
+        errors.push(`Managed runtime file changed after initialization: ${file.path}. Run \`npx azi sync\` and review conflicts.`);
+      }
     }
   }
 
@@ -82,6 +91,8 @@ export async function runRuntimeDoctor(rootInput: string): Promise<DoctorReport>
   }
 
   await checkToolAdapters(root, errors, warnings);
+  await checkSkillMap(root, errors, warnings);
+  await checkSkillCatalog(root, errors, warnings);
 
   const projectPackage = await readJsonObject(root, "package.json");
   const scripts = isRecord(projectPackage?.scripts) ? projectPackage.scripts : {};
@@ -114,6 +125,56 @@ export async function runRuntimeDoctor(rootInput: string): Promise<DoctorReport>
     errors,
     warnings
   };
+}
+
+async function checkSkillCatalog(
+  root: string,
+  errors: string[],
+  warnings: string[]
+): Promise<void> {
+  const skillCatalogPath = resolveInsideRoot(root, ".harness/skill-catalog.json");
+  if (!(await pathExists(skillCatalogPath))) {
+    warnings.push("Missing `.harness/skill-catalog.json`.");
+    return;
+  }
+
+  const raw = await readJsonObject(root, ".harness/skill-catalog.json");
+  if (raw === null) {
+    errors.push("Invalid `.harness/skill-catalog.json`.");
+    return;
+  }
+
+  const report = validateSkillCatalog(raw);
+  errors.push(...report.errors.map((message) => `Skill catalog: ${message}`));
+  warnings.push(...report.warnings.map((message) => `Skill catalog: ${message}`));
+  if (!report.valid) {
+    errors.push("`.harness/skill-catalog.json` failed validation.");
+  }
+}
+
+async function checkSkillMap(
+  root: string,
+  errors: string[],
+  warnings: string[]
+): Promise<void> {
+  const skillMapPath = resolveInsideRoot(root, ".harness/skill-map.json");
+  if (!(await pathExists(skillMapPath))) {
+    warnings.push("Missing `.harness/skill-map.json`.");
+    return;
+  }
+
+  const raw = await readJsonObject(root, ".harness/skill-map.json");
+  if (raw === null) {
+    errors.push("Invalid `.harness/skill-map.json`.");
+    return;
+  }
+
+  const report = validateSkillMap(raw);
+  errors.push(...report.errors.map((message) => `Skill map: ${message}`));
+  warnings.push(...report.warnings.map((message) => `Skill map: ${message}`));
+  if (!report.valid) {
+    errors.push("`.harness/skill-map.json` failed validation.");
+  }
 }
 
 async function readProjectProfile(root: string): Promise<ProjectProfile | null> {

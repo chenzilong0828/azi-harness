@@ -50,6 +50,20 @@ describe("runtime doctor", () => {
     expect(report.errors).toContain("Tracked runtime file is missing: .harness/rules/quality.md");
   });
 
+  it("reports managed runtime file drift as an error", async () => {
+    const root = await initializedFixture();
+    await writeFile(
+      path.join(root, ".harness/rules/quality.md"),
+      "# 人工改坏 managed 文件\n"
+    );
+
+    const report = await runRuntimeDoctor(root);
+
+    expect(report.errors).toContain(
+      "Managed runtime file changed after initialization: .harness/rules/quality.md. Run `npx azi sync` and review conflicts."
+    );
+  });
+
   it("warns when project evidence changed after initialization", async () => {
     const root = await initializedFixture();
     const packageJsonPath = path.join(root, "package.json");
@@ -202,6 +216,44 @@ describe("runtime doctor", () => {
     expect(report.errors).toContain(
       "`.cursor/rules/azi-harness.mdc` must point Cursor back to `.harness/project.json`."
     );
+  });
+
+  it("reports invalid skill-map content", async () => {
+    const root = await initializedFixture();
+    await writeFile(
+      path.join(root, ".harness/skill-map.json"),
+      JSON.stringify({
+        schemaVersion: "2",
+        sources: [
+          { id: "dup", matchWhenAny: ["Figma"] },
+          { id: "dup", matchWhenAny: [] }
+        ]
+      }, null, 2)
+    );
+
+    const report = await runRuntimeDoctor(root);
+
+    expect(report.errors).toContain(
+      "Skill map: `.harness/skill-map.json` must declare `schemaVersion: \"1\"`."
+    );
+    expect(report.errors).toContain("Skill map: Duplicate skill source id: dup");
+    expect(report.errors).toContain("`.harness/skill-map.json` failed validation.");
+    expect(report.warnings).toContain("Skill map: Skill source dup has an empty matchWhenAny list.");
+  });
+
+  it("reports invalid skill-catalog content", async () => {
+    const root = await initializedFixture();
+    await writeFile(
+      path.join(root, ".harness/skill-catalog.json"),
+      "{}\n"
+    );
+
+    const report = await runRuntimeDoctor(root);
+
+    expect(report.errors).toContain(
+      "Skill catalog: `.harness/skill-catalog.json` must declare `schemaVersion: \"1\"`."
+    );
+    expect(report.errors).toContain("`.harness/skill-catalog.json` failed validation.");
   });
 });
 

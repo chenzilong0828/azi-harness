@@ -13,14 +13,15 @@
 2. [完整 PRD](./PRD-azi-harness.md)：查看产品规划正文。
 3. [产品范围](./product-scope.md)：确认目标、边界、已放弃方向和当前阶段。
 4. [系统架构](./architecture.md)：理解 workspace、核心包和运行时产物之间的关系。
-5. [CLI 使用说明](./cli.md)：查看当前已实现命令、常用参数和人工审查点。
-6. [运行时协议](./runtime-protocol.md)：理解 `AGENTS.md`、`.harness/`、`.agents/skills/`、`specs/` 的职责。
-7. [Skills 与规则](./skills-and-rules.md)：复核若依、HTWTable、Figma、`.harness/skill-map.json` 和外部 Skill 来源规则。
-8. [Figma 工作流](./figma-workflow.md)：查看 Figma 到规格的流程，以及 429 限流处理。
-9. [发布与 CI](./release-and-ci.md)：查看构建、测试、打包预检和 GitLab CI 接入方式。
-10. [真实项目试点计划](./pilot-plan.md)：把本地开发版推进到真实项目试点。
-11. [试点记录模板](./pilot-record-template.md)：记录每个真实项目的环境、结果和问题。
-12. [人工复检清单](./review-checklist.md)：阶段完成后按清单做人工验收。
+5. [后续开发计划](./development-plan.md)：查看下一阶段路线图和每阶段自审要求。
+6. [CLI 使用说明](./cli.md)：查看当前已实现命令、常用参数和人工审查点。
+7. [运行时协议](./runtime-protocol.md)：理解 `AGENTS.md`、`.harness/`、`.agents/skills/`、`specs/` 的职责。
+8. [Skills 与规则](./skills-and-rules.md)：复核若依、HTWTable、Figma、Skill Hub 目录、匹配表和外部 Skill 来源规则。
+9. [Figma 工作流](./figma-workflow.md)：查看 Figma 到规格的流程，以及 429 限流处理。
+10. [发布与 CI](./release-and-ci.md)：查看构建、测试、打包预检和 GitLab CI 接入方式。
+11. [真实项目试点计划](./pilot-plan.md)：把本地开发版推进到真实项目试点。
+12. [试点记录模板](./pilot-record-template.md)：记录每个真实项目的环境、结果和问题。
+13. [人工复检清单](./review-checklist.md)：阶段完成后按清单做人工验收。
 
 ## 权威来源
 
@@ -28,3 +29,20 @@
 - 根目录 [../PRD-azi-harness.md](../PRD-azi-harness.md) 只保留薄入口，避免在项目根和 `docs/` 下维护两份正文。
 - `docs/MEMORY.md` 负责交接上下文，不替代 PRD。
 - 如果文档与代码行为冲突，应以代码和测试结果为证据，随后修正文档。
+
+## 当前主流程
+
+```bash
+npx azi-harness setup . --yes
+npx azi task "请依照这个 Figma 页面开发：<url>"
+npx azi workflow start user-management --task "用户管理列表改造" --yes
+npx azi workflow status
+npx azi workflow advance --target specs/001-user-management --to plan
+npx azi sdd clarify --target specs/001-user-management --write
+npx azi sdd status --target specs/001-user-management
+npx azi check
+npx azi review --target specs/001-user-management --full --diff --evidence --write
+```
+
+中文功能名请使用 `--slug` 提供稳定英文目录名。
+完整工作流状态保存在 `.harness/workflows/`，阶段日志可通过 `npx azi workflow log --target specs/<id-feature>` 查看。

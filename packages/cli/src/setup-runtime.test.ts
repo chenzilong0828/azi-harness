@@ -61,6 +61,9 @@ describe("runtime setup", () => {
     expect(await readFile(path.join(root, ".harness/skill-map.json"), "utf8")).toContain(
       "\"schemaVersion\": \"1\""
     );
+    expect(await readFile(path.join(root, ".harness/skill-catalog.json"), "utf8")).toContain(
+      "\"installationStatusPolicy\": \"not-verified-by-project-runtime\""
+    );
   });
 });
 

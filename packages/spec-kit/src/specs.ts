@@ -32,6 +32,7 @@ const REQUIRED_SPEC_FILES = [
 
 const REQUIRED_MARKDOWN_HEADINGS = {
   "requirements.md": [
+    "## SDD 追踪",
     "## 背景与目标",
     "## 用户角色",
     "## 范围",
@@ -60,6 +61,57 @@ const REQUIRED_MARKDOWN_HEADINGS = {
     "## 检查结果",
     "## Review 记录",
     "## HTWTable 说明"
+  ],
+  "workflow.md": [
+    "## 当前阶段",
+    "## 阶段状态机",
+    "## 必读文件",
+    "## 推荐 Skill",
+    "## 进入条件",
+    "## 完成条件",
+    "## 未知项与阻塞",
+    "## 人工确认点",
+    "## 下一步",
+    "## 日志"
+  ]
+} as const;
+
+const REQUIRED_FILLED_FIELDS = {
+  "requirements.md": [
+    "Background / 背景：",
+    "User goal / 用户目标：",
+    "Business goal / 业务目标：",
+    "APIs：",
+    "Permissions / 权限："
+  ],
+  "design.md": [
+    "Route / 路由：",
+    "Data flow / 数据流：",
+    "Request mapping / 请求映射：",
+    "Permission integration / 权限接入：",
+    "Component choice / 组件选择：",
+    "HTWTable evaluation / HTWTable 评估：",
+    "Vue constraints / Vue 约束："
+  ],
+  "acceptance.md": []
+} as const;
+
+const RECOMMENDED_FILLED_FIELDS = {
+  "requirements.md": [
+    "Dictionaries / 字典：",
+    "Rules / 规则："
+  ],
+  "design.md": [
+    "Dictionary integration / 字典接入：",
+    "Feedback / Message / Download 复用：",
+    "Rollback / 回退方案："
+  ],
+  "acceptance.md": [
+    "lint：",
+    "test：",
+    "build：",
+    "Reviewer：",
+    "Used / Exception："
   ]
 } as const;
 
@@ -73,6 +125,20 @@ export interface PreparedSpecCreation {
 export interface SpecValidationReport {
   specPath: string;
   valid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface SpecTraceabilityReport {
+  specPath: string;
+  valid: boolean;
+  requirementIds: string[];
+  taskIds: string[];
+  acceptanceIds: string[];
+  taskToRequirements: Record<string, string[]>;
+  acceptanceToRequirements: Record<string, string[]>;
+  requirementToTasks: Record<string, string[]>;
+  requirementToAcceptance: Record<string, string[]>;
   errors: string[];
   warnings: string[];
 }
@@ -200,7 +266,11 @@ async function validateSingleSpecDirectory(
     }
   }
 
-  const markdownFiles = ["requirements.md", "design.md", "tasks.md", "acceptance.md"] as const;
+  if (!(await pathExists(path.join(specDirectory, "workflow.md")))) {
+    warnings.push(`Missing workflow tracker: ${relativeSpecPath}/workflow.md. Use \`azi workflow start\` for the full workflow engine.`);
+  }
+
+  const markdownFiles = ["requirements.md", "design.md", "tasks.md", "acceptance.md", "workflow.md"] as const;
   for (const fileName of markdownFiles) {
     const absolutePath = path.join(specDirectory, fileName);
     if (!(await pathExists(absolutePath))) {
@@ -213,6 +283,7 @@ async function validateSingleSpecDirectory(
     }
 
     validateMarkdownStructure(content, relativeSpecPath, fileName, warnings);
+    validateDraftPlaceholders(content, relativeSpecPath, fileName, errors, warnings);
   }
 
   const screensPath = path.join(specDirectory, "screens.yaml");
@@ -245,9 +316,127 @@ async function validateSingleSpecDirectory(
     }
   }
 
+  const traceability = await analyzeSpecTraceabilityFromDirectory(root, specDirectory);
+  errors.push(...traceability.errors);
+  warnings.push(...traceability.warnings);
+
   return {
     specPath: relativeSpecPath,
     valid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+export async function analyzeSpecTraceabilityFromDirectory(
+  rootInput: string,
+  specDirectoryInput: string
+): Promise<SpecTraceabilityReport> {
+  const root = path.resolve(rootInput);
+  const specDirectory = path.resolve(specDirectoryInput);
+  const specPath = toPortablePath(path.relative(root, specDirectory));
+  return analyzeSpecTraceability({
+    specPath,
+    requirements: await readOptionalText(path.join(specDirectory, "requirements.md")),
+    tasks: await readOptionalText(path.join(specDirectory, "tasks.md")),
+    acceptance: await readOptionalText(path.join(specDirectory, "acceptance.md"))
+  });
+}
+
+export function analyzeSpecTraceability(input: {
+  specPath: string;
+  requirements: string;
+  tasks: string;
+  acceptance: string;
+}): SpecTraceabilityReport {
+  const requirementDefinitions = extractRequirementDefinitions(input.requirements);
+  const requirementIds = uniqueSorted(requirementDefinitions);
+  const taskBlocks = extractChecklistBlocks(input.tasks, "TASK");
+  const acceptanceBlocks = extractChecklistBlocks(input.acceptance, "ACC");
+  const taskIds = uniqueSorted(taskBlocks.map((block) => block.id));
+  const acceptanceIds = uniqueSorted(acceptanceBlocks.map((block) => block.id));
+  const errors: string[] = [];
+  const warnings: string[] = [];
+  const taskToRequirements: Record<string, string[]> = {};
+  const acceptanceToRequirements: Record<string, string[]> = {};
+  const requirementToTasks = createEmptyRelationMap(requirementIds);
+  const requirementToAcceptance = createEmptyRelationMap(requirementIds);
+
+  if (requirementIds.length === 0) {
+    errors.push(`${input.specPath}/requirements.md must define at least one \`REQ-001\` style requirement id.`);
+  }
+  if (taskIds.length === 0) {
+    errors.push(`${input.specPath}/tasks.md must define at least one \`TASK-001\` style task id.`);
+  }
+  if (acceptanceIds.length === 0) {
+    errors.push(`${input.specPath}/acceptance.md must define at least one \`ACC-001\` style acceptance id.`);
+  }
+
+  for (const duplicateId of findDuplicateIds(requirementDefinitions)) {
+    errors.push(`${input.specPath}/requirements.md defines duplicate requirement id \`${duplicateId}\`.`);
+  }
+
+  for (const duplicateId of findDuplicateIds(taskBlocks.map((block) => block.id))) {
+    errors.push(`${input.specPath}/tasks.md defines duplicate task id \`${duplicateId}\`.`);
+  }
+  for (const duplicateId of findDuplicateIds(acceptanceBlocks.map((block) => block.id))) {
+    errors.push(`${input.specPath}/acceptance.md defines duplicate acceptance id \`${duplicateId}\`.`);
+  }
+
+  for (const block of taskBlocks) {
+    const refs = collectIds(block.content, "REQ");
+    taskToRequirements[block.id] = refs;
+    if (refs.length === 0) {
+      errors.push(`${input.specPath}/tasks.md ${block.id} must reference at least one requirement id such as \`REQ-001\`.`);
+    }
+    for (const ref of refs) {
+      if (!requirementIds.includes(ref)) {
+        errors.push(`${input.specPath}/tasks.md ${block.id} references unknown requirement id \`${ref}\`.`);
+      } else {
+        requirementToTasks[ref]?.push(block.id);
+      }
+    }
+  }
+
+  for (const block of acceptanceBlocks) {
+    const refs = collectIds(block.content, "REQ");
+    acceptanceToRequirements[block.id] = refs;
+    if (refs.length === 0) {
+      errors.push(`${input.specPath}/acceptance.md ${block.id} must reference at least one requirement id such as \`REQ-001\`.`);
+    }
+    for (const ref of refs) {
+      if (!requirementIds.includes(ref)) {
+        errors.push(`${input.specPath}/acceptance.md ${block.id} references unknown requirement id \`${ref}\`.`);
+      } else {
+        requirementToAcceptance[ref]?.push(block.id);
+      }
+    }
+  }
+
+  for (const requirementId of requirementIds) {
+    if ((requirementToTasks[requirementId] ?? []).length === 0) {
+      warnings.push(`${input.specPath} requirement \`${requirementId}\` has no linked TASK item.`);
+    }
+    if ((requirementToAcceptance[requirementId] ?? []).length === 0) {
+      warnings.push(`${input.specPath} requirement \`${requirementId}\` has no linked ACC item.`);
+    }
+  }
+
+  sortRelationMap(taskToRequirements);
+  sortRelationMap(acceptanceToRequirements);
+  sortRelationMap(requirementToTasks);
+  sortRelationMap(requirementToAcceptance);
+
+  return {
+    specPath: input.specPath,
+    valid: errors.length === 0,
+    requirementIds,
+    taskIds,
+    acceptanceIds,
+    taskToRequirements,
+    acceptanceToRequirements,
+    requirementToTasks,
+    requirementToAcceptance,
     errors,
     warnings
   };
@@ -356,6 +545,9 @@ function validateSource(
   if (source.type === "none" && source.status !== "pending") {
     warnings.push(`${relativeSpecPath}/screens.yaml source.type \`none\` should normally keep status \`pending\`.`);
   }
+  if (source.type === "none" && source.status === "pending") {
+    errors.push(`${relativeSpecPath}/screens.yaml source is still pending; record Figma, screenshot, legacy-page, or approved fallback evidence before implementation.`);
+  }
 }
 
 function validateScreen(
@@ -373,9 +565,13 @@ function validateScreen(
   }
   if (typeof screen.route !== "string") {
     errors.push(`${label}.route must be a string.`);
+  } else if (screen.route.trim() === "") {
+    errors.push(`${label}.route must be filled before implementation.`);
   }
   if (typeof screen.title !== "string") {
     errors.push(`${label}.title must be a string.`);
+  } else if (screen.title.trim() === "") {
+    errors.push(`${label}.title must be filled before implementation.`);
   }
   if (!Array.isArray(screen.states) || screen.states.length === 0) {
     errors.push(`${label}.states must be a non-empty array.`);
@@ -421,6 +617,14 @@ function normalizeFeatureName(input: string): string | null {
 function createRequirementsTemplate(directoryName: string): string {
   return [
     `# 需求：${directoryName}`,
+    "",
+    "## SDD 追踪",
+    "",
+    "- REQ-001：待确认的核心需求。",
+    "  - Source / 来源：",
+    "  - Status / 状态：draft",
+    "  - Tasks / 任务：TASK-001",
+    "  - Acceptance / 验收：ACC-001",
     "",
     "## 背景与目标",
     "",
@@ -529,20 +733,20 @@ function createTasksTemplate(directoryName: string): string {
     "",
     "## 任务列表",
     "",
-    "- [ ] T1 确认需求与页面来源",
-    "  - Requirement / 需求：requirements.md",
+    "- [ ] TASK-001 确认需求与页面来源",
+    "  - Requirement / 需求：REQ-001",
     "  - Files / 文件：requirements.md, screens.yaml",
     "  - Depends on / 前置：接口、权限、字典事实已确认或已记录未知项",
     "  - Verify / 验证：azi spec validate",
-    "- [ ] T2 完成设计决策",
-    "  - Requirement / 需求：design.md",
+    "- [ ] TASK-002 完成设计决策",
+    "  - Requirement / 需求：REQ-001",
     "  - Files / 文件：design.md",
-    "  - Depends on / 前置：T1",
+    "  - Depends on / 前置：TASK-001",
     "  - Verify / 验证：人工复核 HTWTable / 若依接入方案",
-    "- [ ] T3 实现与自检",
-    "  - Requirement / 需求：tasks.md / acceptance.md",
+    "- [ ] TASK-003 实现与自检",
+    "  - Requirement / 需求：REQ-001",
     "  - Files / 文件：业务代码、acceptance.md",
-    "  - Depends on / 前置：T2",
+    "  - Depends on / 前置：TASK-002",
     "  - Verify / 验证：azi check"
   ].join("\n");
 }
@@ -553,7 +757,9 @@ function createAcceptanceTemplate(directoryName: string): string {
     "",
     "## 功能验收",
     "",
-    "- [ ] 功能路径和核心操作已验证。",
+    "- [ ] ACC-001 功能路径和核心操作已验证。",
+    "  - Requirement / 需求：REQ-001",
+    "  - Evidence / 证据：",
     "",
     "## 权限验收",
     "",
@@ -606,6 +812,135 @@ function validateMarkdownStructure(
         warnings.push(`Expected task field \`${label}\` in ${relativeSpecPath}/tasks.md.`);
       }
     }
+  }
+}
+
+function validateDraftPlaceholders(
+  content: string,
+  relativeSpecPath: string,
+  fileName: keyof typeof REQUIRED_MARKDOWN_HEADINGS,
+  errors: string[],
+  warnings: string[]
+): void {
+  if (fileName === "workflow.md" || fileName === "tasks.md") {
+    if (fileName === "tasks.md" && content.includes("TASK-001 确认需求与页面来源")) {
+      warnings.push(`${relativeSpecPath}/tasks.md still uses the default task skeleton; split concrete implementation tasks before coding.`);
+    }
+    return;
+  }
+
+  for (const label of REQUIRED_FILLED_FIELDS[fileName]) {
+    if (hasEmptyListField(content, label)) {
+      errors.push(`${relativeSpecPath}/${fileName} has an empty required field: ${label}`);
+    }
+  }
+
+  for (const label of RECOMMENDED_FILLED_FIELDS[fileName]) {
+    if (hasEmptyListField(content, label)) {
+      warnings.push(`${relativeSpecPath}/${fileName} has an empty recommended field: ${label}`);
+    }
+  }
+
+  if (fileName === "requirements.md" && content.includes("- [ ] 描述业务验收条件。")) {
+    errors.push(`${relativeSpecPath}/requirements.md still contains the default acceptance placeholder.`);
+  }
+  if (fileName === "requirements.md" && /Status \/ 状态：draft\b/iu.test(content)) {
+    errors.push(`${relativeSpecPath}/requirements.md still contains a draft REQ item; confirm it before implementation.`);
+  }
+  if (fileName === "requirements.md" && content.includes("- [ ] 明确记录阻塞问题。")) {
+    errors.push(`${relativeSpecPath}/requirements.md still contains the default unknowns placeholder; write concrete unknowns or mark none.`);
+  }
+}
+
+function hasEmptyListField(content: string, label: string): boolean {
+  const pattern = new RegExp(`^-\\s*${escapeRegExp(label)}\\s*$`, "mu");
+  return pattern.test(content);
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+async function readOptionalText(filePath: string): Promise<string> {
+  if (!(await pathExists(filePath))) {
+    return "";
+  }
+  return readFile(filePath, "utf8");
+}
+
+function collectIds(content: string, prefix: "REQ" | "TASK" | "ACC"): string[] {
+  return uniqueSorted([...content.matchAll(new RegExp(`\\b${prefix}-\\d{3}\\b`, "gu"))].map((match) => match[0]));
+}
+
+function extractRequirementDefinitions(content: string): string[] {
+  return [...content.matchAll(/^\s*(?:[-*]\s+)?(REQ-\d{3})\s*(?:[:：]|$)/gmu)]
+    .map((match) => match[1])
+    .filter((value): value is string => value !== undefined);
+}
+
+function extractChecklistBlocks(
+  content: string,
+  prefix: "TASK" | "ACC"
+): Array<{
+  id: string;
+  content: string;
+}> {
+  const lines = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n").split("\n");
+  const blocks: Array<{ id: string; content: string[] }> = [];
+  let current: { id: string; content: string[] } | null = null;
+  const blockStart = new RegExp(`^-\\s*\\[[ xX]\\]\\s+(${prefix}-\\d{3})\\b`, "u");
+
+  for (const line of lines) {
+    const match = line.match(blockStart);
+    if (match?.[1] !== undefined) {
+      if (current !== null) {
+        blocks.push(current);
+      }
+      current = { id: match[1], content: [line] };
+      continue;
+    }
+    if (current !== null && /^##\s+/u.test(line)) {
+      blocks.push(current);
+      current = null;
+      continue;
+    }
+    if (current !== null) {
+      current.content.push(line);
+    }
+  }
+  if (current !== null) {
+    blocks.push(current);
+  }
+
+  return blocks.map((block) => ({
+    id: block.id,
+    content: block.content.join("\n")
+  }));
+}
+
+function uniqueSorted(values: string[]): string[] {
+  return [...new Set(values)].sort((left, right) => left.localeCompare(right));
+}
+
+function findDuplicateIds(values: string[]): string[] {
+  const seen = new Set<string>();
+  const duplicates = new Set<string>();
+  for (const value of values) {
+    if (seen.has(value)) {
+      duplicates.add(value);
+    }
+    seen.add(value);
+  }
+  return [...duplicates].sort((left, right) => left.localeCompare(right));
+}
+
+function createEmptyRelationMap(ids: string[]): Record<string, string[]> {
+  return Object.fromEntries(ids.map((id) => [id, []]));
+}
+
+function sortRelationMap(map: Record<string, string[]>): void {
+  for (const key of Object.keys(map)) {
+    map[key] = uniqueSorted(map[key] ?? []);
   }
 }
 

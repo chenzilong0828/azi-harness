@@ -1,12 +1,14 @@
 {
-  "name": "azi-harness-workspace",
-  "version": "0.1.0-dev.0",
-  "private": true,
+  "name": "azi-harness",
+  "version": "0.1.1",
   "description": "Team-level AI coding runtime for frontend projects.",
   "type": "module",
   "bin": {
-    "azi-harness": "./scripts/azi-harness.mjs"
+    "azi": "dist/azi.js"
   },
+  "files": [
+    "dist/azi.js"
+  ],
   "workspaces": [
     "packages/*"
   ],
@@ -14,16 +16,20 @@
     "build": "tsc -b",
     "clean": "tsc -b --clean",
     "pack:check": "node scripts/pack-check.mjs",
+    "bundle": "npx esbuild packages/cli/src/bin.ts --bundle --platform=node --target=node20 --format=esm --outfile=dist/azi.js \"--external:node:*\" --external:yaml",
+    "prepublishOnly": "npm run bundle",
     "typecheck": "tsc -b --pretty false",
     "test": "vitest run",
     "test:watch": "vitest",
     "azi": "node packages/cli/dist/bin.js"
   },
   "dependencies": {
-    "@types/node": "^22.15.0",
-    "typescript": "^5.8.3"
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
+    "@types/node": "^22.15.0",
+    "esbuild": "^0.28.1",
+    "typescript": "^5.8.3",
     "vitest": "^4.1.9"
   }
 }

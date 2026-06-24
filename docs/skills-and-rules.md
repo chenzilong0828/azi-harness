@@ -1,11 +1,17 @@
 # Skills 与规则
 
 第二阶段开始，`azi-harness` 不再在项目里生成自写业务 `SKILL.md`。
-项目运行时负责提供项目事实、规则、规格、`.harness/skill-map.json` 和 Skill 来源索引；通用能力优先交给外部 Skill、插件 Skill 或官方 Skill。
+项目运行时负责提供项目事实、规则、规格、`.harness/skill-map.json`、`.harness/skill-catalog.json` 和中文 Skill Hub；通用能力优先交给外部 Skill、插件 Skill 或官方 Skill。
 
 ## Skill 来源策略
 
 - 项目内 `.agents/skills/README.md` 只做索引，不复制外部 Skill 正文。
+- 用户以自然语言描述任务时，优先运行 `npx azi task "<用户原话>"`。它会自动判断是否包含 Figma URL、是否需要 Figma 缓存、相似页面、Skill 匹配、实现上下文和 quick check。
+- 新功能、修改、修复等非 Figma 场景也优先通过 `npx azi task "<用户原话>"` 启动；它会自动派生稳定 slug，创建或复用规格目录，并把 Skill 匹配、必读文件、quick check 和下一步放在同一个入口输出。需要人工指定 feature name / slug 时，再使用 `npx azi workflow start <feature-name> --task "<任务描述>" --yes`。
+- 只需要启动上下文时运行 `npx azi context "<任务描述>"`，让 harness 输出项目画像、Skill 匹配、必读文件、当前规则和检查命令。
+- 只需要 Skill 推荐时运行 `npx azi skill match "<任务描述>"`，它会读取 `.harness/skill-map.json` 并输出推荐来源、推荐 Skill、匹配原因和回避项。
+- 用 `npx azi skill list/search/doctor/sources/install-guide` 浏览、搜索、校验目录和查看安装提示。
+- `.harness/skill-catalog.json` 中的安装状态统一为“未验证”，因为项目运行时不能可靠判断各 AI 工具的全局安装情况。
 - 大功能与长链路开发优先考虑 `obra/superpowers`。
 - 设计与页面实现优先考虑 `figma`、`figma-use`、`figma-implement-design`、`playwright`、`screenshot`。
 - 动效任务优先考虑 `greensock/gsap-skills`。
@@ -48,7 +54,16 @@ http://192.168.30.4/chenzl2/htw-table-vue
 
 ## Figma 规则
 
-- Figma 只能先进入规格，不能直接进入页面代码。
-- Figma 类 Skill 只能帮助提取设计事实，真正的页面约束仍要落到 `requirements.md`、`design.md`、`screens.yaml`、`tasks.md`、`acceptance.md`。
+- Figma 默认先进入缓存、规格建议、Codex/AI 实现上下文和候选补丁；只有用户明确允许 `--apply` 时，才可创建不存在的建议目标页面。
+- 已有业务页面不能被覆盖，只能按相似页面和项目事实做最小补丁。
+- Figma 类 Skill 只能帮助提取设计事实，真正的页面约束仍要落到 `.harness/figma-cache/`、`requirements.md`、`design.md`、`screens.yaml`、`tasks.md`、`acceptance.md`。
 - Figma 图像不能推断接口、权限、字典或后端字段。
 - Figma MCP 限流时要记录真实状态和降级来源。
+- 相同 fileKey + nodeId 必须优先读取 `.harness/figma-cache/`，禁止重复请求 Figma API/MCP。
+
+## Review 规则
+
+- 交付前运行 `npx azi review --target specs/<id-feature> --full --diff --evidence --write`。
+- Review 报告只做证据汇总和风险提示，不自动提交、不替代人工审查。
+- 报告写入 `.harness/reviews/`，应与 `acceptance.md` 中的真实检查结果保持一致。
+- 如果 `review` 报告存在 error，必须先处理再交付；warning 需要人工确认是否接受。
