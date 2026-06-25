@@ -209,6 +209,7 @@ target-project/
 - `azi sdd <phase> --target specs/<id-feature>` 默认只预览结构化辅助内容；确认后加 `--write` 写入规格目录的 `sdd/`，不会改写 `requirements.md` 等主规格。
 - 最简单的 Figma 入口是 `azi figma "<figma-node-url>" --yes`：它会自动识别 Figma URL、创建或复用 workflow 规格、缓存来源，并生成规格建议补丁。
 - 设置 `FIGMA_TOKEN` 后，`azi figma "<figma-node-url>" --yes` 会用 fileKey + nodeId 优先读取 `.harness/figma-cache/`；缺失时才调用 Figma REST API 批量导出 SVG icon，并缓存到 `icons/` 和 `assets.json`。
+- 每次成功写入 Figma 来源时，都会更新 `.harness/figma-cache/index.json`，团队和 AI 可以直接按 `cacheKey = fileKey:nodeId` 查到已有缓存位置。
 - 缓存命中、缓存缺失、429 和 fallback 会在输出中明确显示；429 会写入 `retriedAt`，后续运行会先使用本地记录，避免连续请求 Figma。
 - `azi figma "<figma-node-url>" --yes` 还会扫描相似页面，生成 `.harness/implementation/<id-feature>/codex-context.md`，供 Codex 直接执行页面实现或最小补丁。
 - 如果建议目标页面不存在，直接入口会生成 `.harness/proposals/<id-feature>-implementation.patch` 作为候选业务补丁；若目标页面已存在，则只给上下文，避免重写业务代码。

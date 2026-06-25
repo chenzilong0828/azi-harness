@@ -70,6 +70,12 @@ export interface FigmaIdentityRecord {
   assetsPath: string;
 }
 
+export interface FigmaCacheIndex {
+  schemaVersion: "1";
+  updatedAt: string;
+  entries: FigmaIdentityRecord[];
+}
+
 export interface PreparedFigmaWrite {
   root: string;
   specPath: string;
@@ -292,7 +298,9 @@ export async function prepareFigmaFallback(
 }
 
 export async function applyPreparedFigmaWrite(prepared: PreparedFigmaWrite): Promise<string[]> {
-  return applyRuntimeWritePlan(prepared.plan);
+  const written = await applyRuntimeWritePlan(prepared.plan);
+  const indexPath = await upsertFigmaCacheIndex(prepared);
+  return indexPath === null ? written : [...written, indexPath];
 }
 
 export async function getFigmaCacheStatus(rootInput: string, targetInput: string): Promise<FigmaCacheStatus> {
@@ -626,6 +634,65 @@ async function createPreparedWriteAsync(
       "补齐接口、权限、字典和后端字段事实；不要从 Figma 推断这些内容。"
     ]
   };
+}
+
+async function upsertFigmaCacheIndex(prepared: PreparedFigmaWrite): Promise<string | null> {
+  if (prepared.source.source.fileKey === "" || prepared.source.source.nodeId === "") {
+    return null;
+  }
+
+  const indexPath = ".harness/figma-cache/index.json";
+  const existing = await readFigmaCacheIndex(prepared.root, indexPath);
+  const identity = createIdentityRecord(prepared.cachePath, prepared.source);
+  const entries = [
+    ...existing.entries.filter((entry) => entry.sourcePath !== identity.sourcePath),
+    identity
+  ].sort((left, right) => {
+    const byCacheKey = left.cacheKey.localeCompare(right.cacheKey);
+    return byCacheKey === 0 ? left.sourcePath.localeCompare(right.sourcePath) : byCacheKey;
+  });
+  const next = {
+    schemaVersion: "1",
+    updatedAt: prepared.source.generatedAt,
+    entries
+  } satisfies FigmaCacheIndex;
+  const nextContent = json(next);
+  const current = await readOptionalText(prepared.root, indexPath);
+  if (current === nextContent) {
+    return null;
+  }
+
+  await writeText(prepared.root, indexPath, nextContent);
+  return indexPath;
+}
+
+async function readFigmaCacheIndex(root: string, indexPath: string): Promise<FigmaCacheIndex> {
+  const parsed = await readJson<FigmaCacheIndex>(root, indexPath);
+  if (parsed !== null && parsed.schemaVersion === "1" && Array.isArray(parsed.entries)) {
+    return {
+      schemaVersion: "1",
+      updatedAt: typeof parsed.updatedAt === "string" ? parsed.updatedAt : "",
+      entries: parsed.entries.filter(isFigmaIdentityRecord)
+    };
+  }
+
+  return {
+    schemaVersion: "1",
+    updatedAt: "",
+    entries: []
+  };
+}
+
+function isFigmaIdentityRecord(value: unknown): value is FigmaIdentityRecord {
+  return isRecord(value)
+    && value.schemaVersion === "1"
+    && typeof value.cacheKey === "string"
+    && typeof value.fileKey === "string"
+    && typeof value.nodeId === "string"
+    && typeof value.url === "string"
+    && typeof value.target === "string"
+    && typeof value.sourcePath === "string"
+    && typeof value.assetsPath === "string";
 }
 
 async function createSpecProposal(

@@ -125,7 +125,7 @@ npx azi figma fallback --target specs/<id-feature> --source screenshot --referen
 
 底层入口是 `azi figma "<figma-node-url>" --yes`。若人工明确要直接创建缺失页面，可以使用 `azi task "<用户原话>" --apply` 或 `azi figma "<figma-node-url>" --apply`；它会创建建议目标文件并保留候选补丁，但仍不会覆盖已有页面。
 
-`figma spec` 只接受带 `node-id` 的节点级 URL。`--write` 会写入 `.harness/figma-cache/<id-feature>/source.json`、`nodes.json`、`notes.md`，并生成 `.harness/proposals/<id-feature>-figma-source.patch`。补丁建议更新 `screens.yaml` 和 `design.md`，但不会自动覆盖主规格。
+`figma spec` 只接受带 `node-id` 的节点级 URL。`--write` 会写入 `.harness/figma-cache/<id-feature>/source.json`、`nodes.json`、`notes.md`，并更新 `.harness/figma-cache/index.json`。索引用 `cacheKey = fileKey:nodeId` 记录所有本地缓存位置，方便下一次自然语言任务直接命中缓存。补丁建议更新 `screens.yaml` 和 `design.md`，但不会自动覆盖主规格。
 
 Figma MCP 429、无权限或上下文不足时，使用 `figma fallback` 记录导出图、截图或同项目页面。`retriedAt`、`fallback` 和 `notes` 必须能说明为什么降级以及何时可重试。Figma 和降级来源都只能作为视觉、布局、文案和交互来源，不能推断接口、权限、字典或后端字段。
 

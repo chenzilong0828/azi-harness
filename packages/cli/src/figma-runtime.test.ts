@@ -71,7 +71,8 @@ describe("figma runtime", () => {
       ".harness/figma-cache/001-user-management/source.json",
       ".harness/figma-cache/001-user-management/nodes.json",
       ".harness/figma-cache/001-user-management/notes.md",
-      ".harness/proposals/001-user-management-figma-source.patch"
+      ".harness/proposals/001-user-management-figma-source.patch",
+      ".harness/figma-cache/index.json"
     ]);
     expect(prepared.cacheReuse.status).toBe("miss");
 
@@ -83,6 +84,16 @@ describe("figma runtime", () => {
       nodeId: "1:2",
       status: "ok"
     });
+
+    const index = JSON.parse(
+      await readFile(path.join(root, ".harness/figma-cache/index.json"), "utf8")
+    ) as { entries: Array<{ cacheKey: string; sourcePath: string }> };
+    expect(index.entries).toMatchObject([
+      {
+        cacheKey: "fileKey:1:2",
+        sourcePath: ".harness/figma-cache/001-user-management/source.json"
+      }
+    ]);
 
     const proposal = await readFile(
       path.join(root, ".harness/proposals/001-user-management-figma-source.patch"),
@@ -120,6 +131,37 @@ describe("figma runtime", () => {
 
     expect(second.cacheReuse.status).toBe("hit");
     expect(second.cacheReuse.matchedCachePath).toBe(".harness/figma-cache/001-user-management");
+  });
+
+  it("indexes every local cache path for the same Figma identity", async () => {
+    const root = await createSpecRoot();
+    const first = await prepareFigmaSpec({
+      root,
+      target: "specs/001-user-management",
+      url: "https://www.figma.com/design/fileKey/User?node-id=1-2",
+      generatedAt: "2026-06-23T01:02:03.004Z"
+    });
+    await applyPreparedFigmaWrite(first);
+    await mkdir(path.join(root, "specs/002-user-management-copy"), { recursive: true });
+    await writeFile(path.join(root, "specs/002-user-management-copy/screens.yaml"), "version: 1\n", "utf8");
+    await writeFile(path.join(root, "specs/002-user-management-copy/design.md"), "# Design\n", "utf8");
+
+    const second = await prepareFigmaSpec({
+      root,
+      target: "specs/002-user-management-copy",
+      url: "https://www.figma.com/design/fileKey/User?node-id=1-2",
+      generatedAt: "2026-06-23T02:02:03.004Z"
+    });
+    await applyPreparedFigmaWrite(second);
+
+    const index = JSON.parse(
+      await readFile(path.join(root, ".harness/figma-cache/index.json"), "utf8")
+    ) as { entries: Array<{ cacheKey: string; sourcePath: string }> };
+    expect(index.entries.map((entry) => entry.cacheKey)).toEqual(["fileKey:1:2", "fileKey:1:2"]);
+    expect(index.entries.map((entry) => entry.sourcePath)).toEqual([
+      ".harness/figma-cache/001-user-management/source.json",
+      ".harness/figma-cache/002-user-management-copy/source.json"
+    ]);
   });
 
   it("reuses the current target Figma cache without write conflicts", async () => {

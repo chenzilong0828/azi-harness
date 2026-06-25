@@ -131,6 +131,7 @@
 - `review --diff --evidence`：检查超范围文件、证据引用和命令结果声明
 - `review --ci`：CI/MR 守门员模式，隐含 diff/evidence，error 和 warning 都阻塞；若依项目会检查未经证据确认的 API 路径、权限标识、字典类型、绕过请求封装和缺少 HTWTable 证据的改动
 - `review --suggest-patch`：只生成 `.harness/proposals/*-review.patch`，不直接修改 acceptance.md 或业务代码
+- Figma 缓存索引：`azi figma` / `azi task` 成功写入节点来源后，会更新 `.harness/figma-cache/index.json`，按 `cacheKey = fileKey:nodeId` 记录所有本地缓存位置，方便团队和 AI 在第二次遇到同一页面时直接命中缓存。
 
 ## 当前稳定入口
 

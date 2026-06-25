@@ -249,6 +249,7 @@ npm run azi -- figma "https://www.figma.com/design/<fileKey>/<name>?node-id=1-2"
 - 从 Figma 文件名推导功能名和 slug；如果文件名不是英文 slug，则使用 `figma-node-<node-id>`。
 - 自动执行 `workflow start`，创建或复用 `specs/<id-feature>/`。
 - 写入 `.harness/figma-cache/<id-feature>/source.json`、`nodes.json`、`notes.md`。
+- 更新 `.harness/figma-cache/index.json`，用 `cacheKey = fileKey:nodeId` 索引所有已缓存的 Figma 节点来源。
 - 生成 `.harness/proposals/<id-feature>-figma-source.patch`，建议如何更新 `screens.yaml` 和 `design.md`。
 - 如果环境变量 `FIGMA_TOKEN` 存在，会先查本地缓存，缺失时调用 Figma REST API 批量导出 SVG icon，并写入 `.harness/figma-cache/<id-feature>/icons/` 和 `assets.json`。
 - 如果没有 `FIGMA_TOKEN`，命令不会失败，只会把 SVG 下载记录为 skipped。
@@ -275,7 +276,7 @@ npm run azi -- figma spec . --target specs/001-user-management-list --url "https
 ```
 
 - URL 必须包含 `node-id`，命令会解析并缓存 `fileKey` 和 `nodeId`。
-- `--write` 会写入 `.harness/figma-cache/<id-feature>/source.json`、`nodes.json`、`notes.md`。
+- `--write` 会写入 `.harness/figma-cache/<id-feature>/source.json`、`nodes.json`、`notes.md`，并更新 `.harness/figma-cache/index.json`。
 - 同时生成 `.harness/proposals/<id-feature>-figma-source.patch`，建议如何更新 `screens.yaml` 和 `design.md`。
 - 命令不会直接覆盖主规格文件，补丁必须人工审查后再合并。
 
