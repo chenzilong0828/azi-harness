@@ -76,6 +76,14 @@ export interface FigmaCacheIndex {
   entries: FigmaIdentityRecord[];
 }
 
+interface ReusableFigmaCache {
+  cachePath: string;
+  source: FigmaSourceRecord;
+  nodes: FigmaNodeCache | null;
+  lookup: "index" | "scan";
+  warnings: string[];
+}
+
 export interface PreparedFigmaWrite {
   root: string;
   specPath: string;
@@ -217,10 +225,13 @@ export async function prepareFigmaSpec(
       reusable.source.source.status === "fallback" ? "fallback" : "hit",
       parsed,
       reusable.cachePath,
-      `Figma cache ${reusable.source.source.status === "fallback" ? "fallback" : "hit"}: ${reusable.cachePath}`,
-      reusable.source.source.status === "fallback"
-        ? ["Matched cache is a fallback source; do not retry Figma until a human confirms the next checkpoint."]
-        : []
+      `Figma cache ${reusable.lookup === "index" ? "index " : ""}${reusable.source.source.status === "fallback" ? "fallback" : "hit"}: ${reusable.cachePath}`,
+      [
+        ...reusable.warnings,
+        ...(reusable.source.source.status === "fallback"
+          ? ["Matched cache is a fallback source; do not retry Figma until a human confirms the next checkpoint."]
+          : [])
+      ]
     );
   if (reusable !== null && reusable.cachePath === cachePath) {
     return createPreparedWrite(
@@ -948,16 +959,61 @@ function createAssetReport(
 async function findReusableFigmaCache(
   root: string,
   parsed: ParsedFigmaNodeUrl
-): Promise<{ cachePath: string; source: FigmaSourceRecord; nodes: FigmaNodeCache | null } | null> {
+): Promise<ReusableFigmaCache | null> {
+  const indexed = await findReusableFigmaCacheFromIndex(root, parsed);
+  if (indexed.hit !== null) {
+    return indexed.hit;
+  }
+
   const entries = await listFigmaCacheEntries(root);
   for (const cachePath of entries) {
     const source = await readJson<FigmaSourceRecord>(root, path.posix.join(cachePath, "source.json"));
     if (source?.source.fileKey === parsed.fileKey && source.source.nodeId === parsed.nodeId) {
       const nodes = await readJson<FigmaNodeCache>(root, path.posix.join(cachePath, "nodes.json"));
-      return { cachePath, source, nodes };
+      return { cachePath, source, nodes, lookup: "scan", warnings: indexed.warnings };
     }
   }
   return null;
+}
+
+async function findReusableFigmaCacheFromIndex(
+  root: string,
+  parsed: ParsedFigmaNodeUrl
+): Promise<{ hit: ReusableFigmaCache | null; warnings: string[] }> {
+  const indexPath = ".harness/figma-cache/index.json";
+  const index = await readFigmaCacheIndex(root, indexPath);
+  if (index.entries.length === 0) {
+    return { hit: null, warnings: [] };
+  }
+
+  const warnings: string[] = [];
+  const cacheKey = figmaCacheKey(parsed.fileKey, parsed.nodeId);
+  for (const entry of index.entries.filter((item) => item.cacheKey === cacheKey)) {
+    const source = await readJson<FigmaSourceRecord>(root, entry.sourcePath);
+    if (source === null) {
+      warnings.push(`Figma cache index entry is stale: ${entry.sourcePath}`);
+      continue;
+    }
+    if (source.source.fileKey !== parsed.fileKey || source.source.nodeId !== parsed.nodeId) {
+      warnings.push(`Figma cache index entry does not match its source: ${entry.sourcePath}`);
+      continue;
+    }
+
+    const cachePath = path.posix.dirname(entry.sourcePath);
+    const nodes = await readJson<FigmaNodeCache>(root, path.posix.join(cachePath, "nodes.json"));
+    return {
+      hit: {
+        cachePath,
+        source,
+        nodes,
+        lookup: "index",
+        warnings
+      },
+      warnings
+    };
+  }
+
+  return { hit: null, warnings };
 }
 
 async function findReusableFigmaAssetManifest(

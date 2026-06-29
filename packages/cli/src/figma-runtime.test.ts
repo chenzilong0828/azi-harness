@@ -131,6 +131,7 @@ describe("figma runtime", () => {
 
     expect(second.cacheReuse.status).toBe("hit");
     expect(second.cacheReuse.matchedCachePath).toBe(".harness/figma-cache/001-user-management");
+    expect(second.cacheReuse.message).toContain("index hit");
   });
 
   it("indexes every local cache path for the same Figma identity", async () => {
@@ -183,6 +184,7 @@ describe("figma runtime", () => {
 
     expect(second.cacheReuse.status).toBe("hit");
     expect(second.cacheReuse.matchedCachePath).toBe(".harness/figma-cache/001-user-management");
+    expect(second.cacheReuse.message).toContain("index hit");
     expect(second.plan.hasConflicts).toBe(false);
   });
 

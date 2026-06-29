@@ -122,7 +122,7 @@ import {
   type WorkflowStatusReport
 } from "./workflow-runtime.js";
 
-const CLI_VERSION = "0.1.1";
+const CLI_VERSION = "0.1.2";
 
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2);

@@ -11,10 +11,10 @@
     "dist"
   ],
   "dependencies": {
-    "@azi-harness/checks": "0.1.1",
-    "@azi-harness/core": "0.1.1",
-    "@azi-harness/detectors": "0.1.1",
-    "@azi-harness/runtime-templates": "0.1.1",
-    "@azi-harness/spec-kit": "0.1.1"
+    "@azi-harness/checks": "0.1.2",
+    "@azi-harness/core": "0.1.2",
+    "@azi-harness/detectors": "0.1.2",
+    "@azi-harness/runtime-templates": "0.1.2",
+    "@azi-harness/spec-kit": "0.1.2"
   }
 }

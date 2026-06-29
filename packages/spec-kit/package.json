@@ -15,7 +15,7 @@
     "schemas"
   ],
   "dependencies": {
-    "@azi-harness/core": "0.1.1",
+    "@azi-harness/core": "0.1.2",
     "yaml": "^2.8.1"
   }
 }

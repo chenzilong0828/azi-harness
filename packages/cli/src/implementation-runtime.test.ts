@@ -53,6 +53,7 @@ describe("implementation runtime", () => {
     expect(report.written).toBe(".harness/implementation/001-user-management/codex-context.md");
     const context = await readFile(path.join(root, report.written), "utf8");
     expect(context).toContain("Codex 实现上下文");
+    expect(context).toContain("Figma 缓存状态：未生成");
     expect(context).toContain("src/views/system/role/index.vue");
     expect(context).toContain("不从 Figma 推断");
   });
