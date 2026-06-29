@@ -5,7 +5,7 @@ import {
   type RuntimeManifest
 } from "@azi-harness/core";
 
-export const RUNTIME_VERSION = "0.1.2";
+export const RUNTIME_VERSION = "0.1.3";
 const TEMPLATE_VERSION = "11";
 
 export interface RuntimeTemplateOptions {
